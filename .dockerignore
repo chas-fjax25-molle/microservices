@@ -8,5 +8,4 @@ docker-compose.yml
 .docker/
 config/
 scripts/
-vault/
 target/
