@@ -8,7 +8,7 @@
         <artifactId>microservices</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>service-repository</artifactId>
+    <artifactId>service-registry</artifactId>
 
     <dependencies>
         <dependency>
