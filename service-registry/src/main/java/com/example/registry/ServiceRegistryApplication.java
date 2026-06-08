@@ -1,11 +1,11 @@
-package com.example.repository;
+package com.example.registry;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ServiceRepositoryApplication {
+public class ServiceRegistryApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ServiceRepositoryApplication.class, args);
+        SpringApplication.run(ServiceRegistryApplication.class, args);
     }
 }
