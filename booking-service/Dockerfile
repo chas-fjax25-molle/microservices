@@ -1,8 +1,6 @@
 FROM maven:3-eclipse-temurin-25 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY common common/
-COPY booking-service booking-service/
+COPY . .
 RUN mvn package -pl booking-service -am -DskipTests
 
 FROM eclipse-temurin:25-jre

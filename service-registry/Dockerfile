@@ -1,8 +1,6 @@
 FROM maven:3-eclipse-temurin-25 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY common common/
-COPY service-registry service-registry/
+COPY . .
 RUN mvn package -pl service-registry -am -DskipTests
 
 FROM eclipse-temurin:25-jre
