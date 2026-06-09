@@ -1,0 +1,91 @@
+services:
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    user: root
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    volumes:
+      - ./vault/config:/vault/config:ro
+      - ./vault/init.sh:/vault/init.sh:ro
+      - vault-data:/vault/file
+      - vault-secrets:/vault/secrets
+    ports:
+      - "8202:8200"
+    entrypoint: ["/bin/sh", "/vault/init.sh"]
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 5s
+      retries: 20
+      start_period: 15s
+
+  service-registry:
+    build:
+      context: .
+      dockerfile: service-registry/Dockerfile
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8761
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - vault-secrets:/run/secrets:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - vault-secrets:/run/secrets:ro
+
+  booking-service:
+    build:
+      context: .
+      dockerfile: booking-service/Dockerfile
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8083
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - vault-secrets:/run/secrets:ro
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - vault-secrets:/run/secrets:ro
+    ports:
+      - "8080:8080"
+
+volumes:
+  vault-data:
+  vault-secrets:
