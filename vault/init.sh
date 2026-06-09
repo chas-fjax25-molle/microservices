@@ -1,10 +1,10 @@
 #!/bin/sh
-# vault/init.sh — Vault container entrypoint.
+# vault/init.sh - Vault container entrypoint.
 #
 # Responsibilities (in order):
 #   1. Start Vault server in background with the file-backed config
 #   2. If Vault has NOT been initialized yet (first-ever run):
-#       a. Initialise with a single unseal key (dev convenience — real
+#       a. Initialise with a single unseal key (dev convenience - real
 #          production splits this across N operators)
 #       b. Unseal
 #       c. Enable KV v2 secrets engine at microservices/
@@ -13,20 +13,20 @@
 #       f. Issue a long-lived (720 h) token for each service
 #       g. Write tokens to the shared volume so service containers can read them
 #   3. If Vault IS already initialized (subsequent runs):
-#       a. Unseal with the stored key — data survives from the previous run
+#       a. Unseal with the stored key - data survives from the previous run
 #   4. Bring Vault to foreground
 #
 # Shared volume layout:
-#   /vault/file/       — persistent Vault storage (survives restarts)
-#   /vault/secrets/    — written by this script, mounted at /run/secrets/ on
+#   /vault/file/       - persistent Vault storage (survives restarts)
+#   /vault/secrets/    - written by this script, mounted at /run/secrets/ on
 #                        every service container so VaultConfig can find tokens
-#   /vault/file/init.json  — init output (unseal key + root token), kept only
+#   /vault/file/init.json  - init output (unseal key + root token), kept only
 #                            for operational reference; service tokens are
 #                            regenerated only when missing
 
 set -e
 
-# ── Paths ──────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------
 VAULT_CONFIG="/vault/config/vault.hcl"
 VAULT_FILE="/vault/file"
 SHARED_SECRETS="/vault/secrets"
@@ -34,14 +34,13 @@ INIT_FILE="$VAULT_FILE/init.json"
 UNSEAL_KEY_FILE="$VAULT_FILE/unseal_key"
 
 SERVICES="api-gateway user-service booking-service"
-
-# ── Helpers ────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------
 
 log()   { echo "==> $*"; }
-ok()    { echo "   ✓ $*"; }
-fail()  { echo "   ✗ $*" >&2; exit 1; }
+ok()    { echo " Success $*"; }
+fail()  { echo " Failed” $*" >&2; exit 1; }
 
-# ── Step functions ─────────────────────────────────────────────────────────
+# ---------------------------------------------------------
 
 start_vault_server() {
     log "Starting Vault server in background"
@@ -137,7 +136,7 @@ ensure_service_tokens() {
     # tokens are gone even though Vault's persistent storage still has its
     # init data. Re-create tokens using the stored root token.
     if [ ! -f "$SHARED_SECRETS/vault-token-api-gateway" ]; then
-        log "Service tokens missing — reissuing"
+        log "Service tokens missing - reissuing"
         apk add --no-cache jq >/dev/null 2>&1
         ROOT_TOKEN=$(jq -r '.root_token' "$INIT_FILE")
         vault login "$ROOT_TOKEN"
@@ -151,15 +150,16 @@ wait_for_vault() {
     wait $VAULT_PID
 }
 
-# ── Main ───────────────────────────────────────────────────────────────────
+# -- Main -------------------------------------------------
 
+# ---------------------------------------------------------
 start_vault_server
 
 if [ ! -f "$INIT_FILE" ]; then
     echo ""
-    echo "═══════════════════════════════════════════"
-    echo "  First run — full Vault bootstrap"
-    echo "═══════════════════════════════════════════"
+    echo "---------------------------------------------------------"
+    echo "  First run - full Vault bootstrap"
+    echo "---------------------------------------------------------"
     echo ""
 
     install_tools
@@ -173,15 +173,15 @@ if [ ! -f "$INIT_FILE" ]; then
     issue_service_tokens
 
     echo ""
-    echo "═══════════════════════════════════════════"
-    echo "  Vault initialised and bootstrapped"
-    echo "═══════════════════════════════════════════"
+    echo "---------------------------------------------------------"
+    echo "  Vault initialized and bootstrapped"
+    echo ---------------------------------------------------------
     echo ""
 else
     echo ""
-    echo "═══════════════════════════════════════════"
-    echo "  Vault already initialised — unsealing"
-    echo "═══════════════════════════════════════════"
+    echo "---------------------------------------------------------"
+    echo "  Vault already initialized - unsealing"
+    echo "---------------------------------------------------------"
     echo ""
     unseal_vault
 fi
