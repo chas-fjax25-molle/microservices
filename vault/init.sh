@@ -38,7 +38,7 @@ SERVICES="api-gateway user-service booking-service"
 
 log()   { echo "==> $*"; }
 ok()    { echo " Success $*"; }
-fail()  { echo " Failed” $*" >&2; exit 1; }
+fail()  { echo " Failed $*" >&2; exit 1; }
 
 # ---------------------------------------------------------
 

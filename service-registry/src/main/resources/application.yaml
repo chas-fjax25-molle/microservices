@@ -2,6 +2,20 @@ spring:
     application:
         name: service-registry
 
+server:
+    port: 8761
+
+eureka:
+    client:
+        registerWithEureka: false
+        fetchRegistry: false
+        serviceUrl:
+            defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+    instance:
+        hostname: localhost
+    server:
+        enableSelfPreservation: false
+
 management:
     endpoints:
         web:
