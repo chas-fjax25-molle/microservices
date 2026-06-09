@@ -1,3 +1,6 @@
+# Enforce LFs on all files
+* text=auto eol=lf
+
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
