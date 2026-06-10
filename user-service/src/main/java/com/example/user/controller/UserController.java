@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.http.HttpStatus;
 import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
@@ -62,7 +63,7 @@ public class UserController {
      */
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUser(@RequestBody @Validated UserRegisterDTO entity) {
-        return ResponseEntity.ok(userService.registerUser(entity));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(entity));
     }
 
     /**

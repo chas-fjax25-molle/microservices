@@ -2,13 +2,15 @@ package com.example.user.service;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
-import com.example.user.exception.UserException;
+import com.example.user.exception.UserNotFoundException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
 
@@ -23,12 +25,13 @@ public class UserService {
     // User validate
     public UserResponseDTO validateUser(LoginRequestDTO loginRequest) {
         if (loginRequest.accountName().isEmpty() || loginRequest.password().isEmpty()) {
-            throw new UserException("Username and password cannot be blank");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password cannot be blank");
         }
         User user = userRepository.findByUsername(loginRequest.accountName())
-                .orElseThrow(() -> new UserException("Invalid username or password"));
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
         if (!user.getPassword().equals(loginRequest.password())) {
-            throw new UserException("Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
         return new UserResponseDTO(
                 user.getId(),
@@ -58,13 +61,13 @@ public class UserService {
                         user.getId(),
                         user.getUsername(),
                         user.getEmail()))
-                .orElseThrow(() -> new UserException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     // Update user
     public UserResponseDTO updateUser(UUID id, UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         if (userUpdateDTO.newUsername() != null) {
             user.setUsername(userUpdateDTO.newUsername());
@@ -87,7 +90,7 @@ public class UserService {
     // Delete user
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
-            throw new UserException("User not found");
+            throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
     }
