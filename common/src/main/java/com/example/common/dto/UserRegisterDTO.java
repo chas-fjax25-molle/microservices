@@ -2,8 +2,6 @@ package com.example.common.dto;
 
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 @Validated
