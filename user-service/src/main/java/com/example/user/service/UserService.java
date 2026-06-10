@@ -11,12 +11,13 @@ import com.example.user.exception.UserException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
-@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     // User validate
     public void validateUser(UserRegisterDTO userRegisterDTO) {
