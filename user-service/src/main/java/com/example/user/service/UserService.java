@@ -24,10 +24,10 @@ public class UserService {
 
     // User validate
     public UserResponseDTO validateUser(LoginRequestDTO loginRequest) {
-        if (loginRequest.accountName().isEmpty() || loginRequest.password().isEmpty()) {
+        if (loginRequest.username().isEmpty() || loginRequest.password().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password cannot be blank");
         }
-        User user = userRepository.findByUsername(loginRequest.accountName())
+        User user = userRepository.findByUsername(loginRequest.username())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
         if (!user.getPassword().equals(loginRequest.password())) {
