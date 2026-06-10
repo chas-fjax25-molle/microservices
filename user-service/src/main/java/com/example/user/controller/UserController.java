@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.springframework.http.HttpStatus;
 import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
@@ -25,6 +24,7 @@ import lombok.NonNull;
 
 @RestController
 @RequestMapping("/api/user-service/users")
+@Tag(name = "User Service", description = "Endpoints for managing users")
 public class UserController {
     private final UserService userService;
 
@@ -39,6 +39,12 @@ public class UserController {
      * @param request Login credentials
      * @return The user details if the login credentials are valid
      */
+    @Operation(summary = "Validate login credentials", description = "Validates user login and return user details if credentials are valid.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login successful, user details returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid reqest"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     @PostMapping("/validate")
     public ResponseEntity<UserResponseDTO> validateLogin(@RequestBody @Validated LoginRequestDTO request) {
         return ResponseEntity.ok(userService.validateUser(request));
@@ -50,6 +56,11 @@ public class UserController {
      * @param id The ID of the user to get
      * @return The user details for the given ID if it exists
      */
+    @Operation(summary = "Get user by ID", description = "Fetches a ser by their niqe UUID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUser(@PathVariable @NotNull @NonNull UUID id) {
         return ResponseEntity.ok(userService.getUserById(id));
@@ -61,9 +72,14 @@ public class UserController {
      * @param entity The user details to register
      * @return The user details for the newly registered user
      */
+    @Operation(summary = "Register new user", description = "Creates a new ser in the system")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request")
+    }) 
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUser(@RequestBody @Validated UserRegisterDTO entity) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(entity));
+        return ResponseEntity.ok(userService.registerUser(entity));
     }
 
     /**
@@ -73,6 +89,11 @@ public class UserController {
      * @param entity Structure containing the updated user details
      * @return The updated user details for the given ID if it exists
      */
+    @Operation(summary = "Update user", description = "Updates an existing user's details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable @NotNull @NonNull UUID id,
             @RequestBody @Validated UserUpdateDTO entity) {
@@ -85,6 +106,11 @@ public class UserController {
      * @param id The ID of the user to delete
      * @return A response indicating that the user has been deleted successfully
      */
+    @Operation(summary = "Delete user", description = "Deletes a user by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable @NotNull @NonNull UUID id) {
         userService.deleteUser(id);
