@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
@@ -20,13 +21,19 @@ public class UserService {
     }
 
     // User validate
-    public void validateUser(UserRegisterDTO userRegisterDTO) {
-        if (userRepository.existsByUsername(userRegisterDTO.username())) {
-            throw new UserException("Username already exists");
+    public UserResponseDTO validateUser(LoginRequestDTO loginRequest) {
+        if (loginRequest.accountName().isEmpty() || loginRequest.password().isEmpty()) {
+            throw new UserException("Username and password cannot be blank");
         }
-        if (userRepository.existsByEmail(userRegisterDTO.email())) {
-            throw new UserException("Email already exists");
+        User user = userRepository.findByUsername(loginRequest.accountName())
+                .orElseThrow(() -> new UserException("Invalid username or password"));
+        if (!user.getPassword().equals(loginRequest.password())) {
+            throw new UserException("Invalid username or password");
         }
+        return new UserResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail());
     }
 
     // Create user
@@ -55,7 +62,7 @@ public class UserService {
     }
 
     // Update user
-    public UserUpdateDTO updateUser(UUID id, UserUpdateDTO userUpdateDTO) {
+    public UserResponseDTO updateUser(UUID id, UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserException("User not found"));
 
@@ -71,10 +78,10 @@ public class UserService {
 
         User updatedUser = userRepository.save(user);
 
-        return new UserUpdateDTO(
+        return new UserResponseDTO(
+                id,
                 updatedUser.getUsername(),
-                updatedUser.getEmail(),
-                updatedUser.getPassword());
+                updatedUser.getEmail());
     }
 
     // Delete user
