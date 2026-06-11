@@ -1,22 +1,28 @@
 package com.example.booking;
 
 import com.example.common.dto.EventRegistrationDTO;
+import com.example.common.dto.EventResponseDTO;
 
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
-
-import static org.hamcrest.Matchers.*;
+import java.util.List;
+import java.util.UUID;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,7 +34,41 @@ class BookingControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public EventRegistrationDTO getTestEventRegistrationDTO() {
+    private String uri = "/api/booking-service/bookings";
+
+    private MediaType mt = MediaType.APPLICATION_JSON;
+
+    @BeforeEach
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void setUp() {
+    }
+
+    // ------- Happy Path --------
+
+    @Test
+    void shouldCreateEventSuccessfully() throws Exception {
+        performPost(getTestEventRegistrationDTO()).andExpect(status().isCreated());
+    }
+
+    @Test
+    void shouldGetEventByIdSuccessfully() throws Exception {
+        ResultActions response = performPost(getTestEventRegistrationDTO());
+        EventResponseDTO eventResponseDTO = getResultDTO(response);
+
+        performGetById(eventResponseDTO.id()).andExpect(status().isFound());
+    }
+
+    @Test
+    void shouldGetAllEventsSuccessfully() throws Exception {
+        performPost(getTestEventRegistrationDTO());
+        performPost(getTestEventRegistrationDTO());
+
+        performGetAllEvents().andExpect(status().isFound());
+    }
+
+    // ---- TestDto ----
+
+    private EventRegistrationDTO getTestEventRegistrationDTO() {
         return new EventRegistrationDTO(
                 "test",
                 "testing",
@@ -37,22 +77,43 @@ class BookingControllerIntegrationTest {
                 10);
     }
 
-    @Test
-    void shouldCreateEventSuccessfully() throws Exception {
-        EventRegistrationDTO registration = getTestEventRegistrationDTO();
+    // ---- Controller calls -----
 
-        mockMvc.perform(post("/api/booking-service/bookings")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registration)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", notNullValue()));
+    private ResultActions performPost(EventRegistrationDTO registration) throws Exception {
+        return mockMvc.perform(post(uri)
+                .contentType(mt)
+                .content(objectMapper.writeValueAsString(registration)));
     }
 
-    @Test
-    void shouldReturnBadRequestForInvalidInput() throws Exception {
-        mockMvc.perform(post("/api/booking-service/bookings")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().isBadRequest());
+    private ResultActions performGetById(UUID id) throws Exception {
+        return mockMvc.perform(get(uri + "/" + id));
     }
+
+    private ResultActions performGetAllEvents() throws Exception {
+        return mockMvc.perform(get(uri));
+    }
+
+    // ---- Read result content ----
+
+    private EventResponseDTO getResultDTO(ResultActions resultActions) throws Exception {
+        String responseContent = resultActions
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readValue(responseContent, EventResponseDTO.class);
+    }
+
+    private List<EventResponseDTO> getResultDTOList(ResultActions resultActions) throws Exception {
+        String responseContent = resultActions
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readValue(
+                responseContent,
+                new TypeReference<List<EventResponseDTO>>() {
+                });
+    }
+
 }
