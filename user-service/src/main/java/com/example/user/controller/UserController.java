@@ -2,6 +2,7 @@ package com.example.user.controller;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,10 @@ import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
 import com.example.user.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 
@@ -74,12 +79,12 @@ public class UserController {
      */
     @Operation(summary = "Register new user", description = "Creates a new ser in the system")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "201", description = "User registered successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid request")
-    }) 
+    })
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUser(@RequestBody @Validated UserRegisterDTO entity) {
-        return ResponseEntity.ok(userService.registerUser(entity));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(entity));
     }
 
     /**

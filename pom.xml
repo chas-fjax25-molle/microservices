@@ -30,6 +30,7 @@
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.cloud.version>2025.1.1</spring.cloud.version>
+        <spring.doc.version>3.0.3</spring.doc.version>
     </properties>
 
     <dependencyManagement>
