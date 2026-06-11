@@ -1,9 +1,7 @@
 package com.example.booking.model;
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
