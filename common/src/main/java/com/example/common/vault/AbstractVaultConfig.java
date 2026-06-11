@@ -23,6 +23,36 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Abstract class for Vault configuration. It provides methods for resolving the
  * vault token and reading secrets from Vault.
+ * 
+ * <h2>Example usage</h2>
+ * 
+ * <pre>
+ * <code>
+ * public class VaultConfig extends AbstractVaultConfig {
+ *
+ *    public VaultConfig(
+ *            &#64;Value("${vault.addr:http://vault:8200}") String vaultAddr,
+ *            &#64;Value("${vault.token:}") String vaultToken,
+ *            &#64;Value("${spring.application.name}") String serviceName) {
+ *        super(vaultAddr, vaultToken, serviceName);
+ *    }
+ *
+ *    &#64;Bean
+ *    public JwtUtil jwtUtil() throws Exception {
+ *        String token = resolveVaultToken();
+ *        var keys = fetchJwtKeys(token);
+ *        PublicKey publicKey = parsePublicKey(keys.get("public_key"));
+ *        PrivateKey privateKey = parsePrivateKey(keys.get("private_key"));
+ *        return new JwtUtil(publicKey, privateKey);
+ *    }
+ *
+ *    &#64;Bean
+ *    public RestTemplate restTemplate() {
+ *        return new RestTemplate();
+ *    }
+ * }
+ * </code>
+ * </pre>
  */
 public abstract class AbstractVaultConfig {
     private static final String SECRETS_FILE_PATH = "/run/secrets/vault-token-";
