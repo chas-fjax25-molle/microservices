@@ -1,6 +1,8 @@
 package com.example.booking.model;
 
 import java.security.Timestamp;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 import jakarta.persistence.Entity;
@@ -12,17 +14,17 @@ import jakarta.persistence.Id;
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     private String name;
     private String description;
-    private Timestamp time;
+    private LocalDateTime time;
     private String place;
     private int capacity;
 
     public Event() {
     }
 
-    public Event(String id, String name, String description, Timestamp time, String place, int capacity) {
+    public Event(UUID id, String name, String description, LocalDateTime time, String place, int capacity) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -31,11 +33,11 @@ public class Event {
         this.capacity = capacity;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -55,11 +57,11 @@ public class Event {
         this.description = description;
     }
 
-    public Timestamp getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 
-    public void setTime(Timestamp time) {
+    public void setTime(LocalDateTime time) {
         this.time = time;
     }
 
