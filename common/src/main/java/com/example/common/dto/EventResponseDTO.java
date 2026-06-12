@@ -1,13 +1,14 @@
 package com.example.common.dto;
 
 import java.security.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record EventResponseDTO(
         UUID id,
         String name,
         String description,
-        Timestamp time,
+        LocalDateTime time,
         String place,
         int capacity,
         int freeSpots) {
