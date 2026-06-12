@@ -96,7 +96,7 @@ public class JwtUtil {
             throw new IllegalStateException("Private key is not set, cannot generate token");
         }
 
-        Date name = new Date();
+        Date now = new Date();
 
         var builder = Jwts.builder()
                 .subject(username)
@@ -107,8 +107,8 @@ public class JwtUtil {
         }
 
         return builder
-                .issuedAt(name)
-                .expiration(new Date(name.getTime() + expirationMs))
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMs))
                 .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
