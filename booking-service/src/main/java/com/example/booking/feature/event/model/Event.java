@@ -1,4 +1,4 @@
-package com.example.booking.model;
+package com.example.booking.feature.event.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

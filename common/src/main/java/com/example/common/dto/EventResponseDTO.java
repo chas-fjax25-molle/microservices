@@ -1,6 +1,5 @@
 package com.example.common.dto;
 
-import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 

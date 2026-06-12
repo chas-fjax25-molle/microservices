@@ -1,6 +1,6 @@
-package com.example.booking;
+package com.example.booking.feature.event;
 
-import com.example.booking.model.Event;
+import com.example.booking.feature.event.model.Event;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
 
@@ -10,10 +10,10 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BookingService {
+public class EventService {
     private final EventRespository eventRepository;
 
-    public BookingService(EventRespository eventRepository) {
+    public EventService(EventRespository eventRepository) {
         this.eventRepository = eventRepository;
     }
      
@@ -27,9 +27,21 @@ public class BookingService {
         return toDto(eventRepository.findById(id).orElseThrow());
     }
 
-    public List<EventResponseDTO> getAllEvents(){
+    public List<EventResponseDTO> getAllEvents() {
         List<Event> events = eventRepository.findAll();
         return events.stream().map(this::toDto).toList();
+    }
+    
+    public EventResponseDTO update(UUID id, EventRegistrationDTO update) {
+        Event event = eventRepository.findById(id).orElseThrow();
+        event = updateEvent(event, update);
+        eventRepository.save(event);
+        return toDto(event);
+    }
+
+    public void delete(UUID id) {
+        eventRepository.findById(id).orElseThrow();
+        eventRepository.deleteById(id);
     }
     
 
@@ -54,6 +66,15 @@ public class BookingService {
                 event.getPlace(),
                 event.getCapacity(),
                 event.getCapacity());
+    }
+
+    private Event updateEvent(Event event, EventRegistrationDTO update) {
+        event.setName(update.name());
+        event.setCapacity(update.capacity());
+        event.setTime(update.time());
+        event.setDescription(update.description());
+        event.setPlace(update.place());
+        return event;
     }
 }
   
