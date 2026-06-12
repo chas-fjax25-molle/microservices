@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -58,6 +59,16 @@ public class JwtUtil {
     }
 
     /**
+     * Parses a JWT token and returns the role.
+     *
+     * @param token the JWT token to parse
+     * @return the parsed role as Optional, empty if no role is present
+     */
+    public Optional<String> getRoleFromToken(String token) {
+        return Optional.ofNullable(parseClaims(token).get("role", String.class));
+    }
+
+    /**
      * Generates a JWT token for the given username and ID.
      *
      * @param username the username to include in the token
@@ -67,15 +78,35 @@ public class JwtUtil {
      * @throws IllegalStateException if the private key is not set
      */
     public String generateToken(String username, UUID id) {
+        return generateToken(username, id, null);
+    }
+
+    /**
+     * Generates a JWT token for the given username, ID and role.
+     * 
+     * @param username the username to include in the token
+     * @param id       the ID of the user to include in the token
+     * @param role     the role of the user to include in the token
+     * @return the generated JWT token
+     * 
+     * @throws IllegalStateException if the private key is not set
+     */
+    public String generateToken(String username, UUID id, String role) {
         if (privateKey == null) {
             throw new IllegalStateException("Private key is not set, cannot generate token");
         }
 
         Date name = new Date();
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(username)
-                .claim("id", id.toString())
+                .claim("id", id.toString());
+
+        if (role != null) {
+            builder.claim("role", role);
+        }
+
+        return builder
                 .issuedAt(name)
                 .expiration(new Date(name.getTime() + expirationMs))
                 .signWith(privateKey, Jwts.SIG.RS256)

@@ -1,6 +1,5 @@
 package com.example.common.security;
 
-import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -75,5 +74,26 @@ class JwtUtilTest {
         assertThatThrownBy(() -> jwtUtil.generateToken("nokey", id))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Private key is not set");
+    }
+
+    @Test
+    void getRoleFromToken_withRole_returnsRole() {
+        JwtUtil jwtUtil = new JwtUtil(keyPair.getPublic(), keyPair.getPrivate());
+        String token = jwtUtil.generateToken("admin_user", UUID.randomUUID(), "ADMIN");
+        assertThat(jwtUtil.getRoleFromToken(token)).isPresent().contains("ADMIN");
+    }
+
+    @Test
+    void getRoleFromToken_withUserRole_returnsRole() {
+        JwtUtil jwtUtil = new JwtUtil(keyPair.getPublic(), keyPair.getPrivate());
+        String token = jwtUtil.generateToken("regular_user", UUID.randomUUID(), "USER");
+        assertThat(jwtUtil.getRoleFromToken(token)).isPresent().contains("USER");
+    }
+
+    @Test
+    void getRoleFromToken_withoutRole_returnsEmpty() {
+        JwtUtil jwtUtil = new JwtUtil(keyPair.getPublic(), keyPair.getPrivate());
+        String token = jwtUtil.generateToken("no_role_user", UUID.randomUUID(), null);
+        assertThat(jwtUtil.getRoleFromToken(token)).isEmpty();
     }
 }
