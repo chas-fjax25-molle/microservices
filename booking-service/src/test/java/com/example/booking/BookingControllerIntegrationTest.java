@@ -3,7 +3,6 @@ package com.example.booking;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @SpringBootTest
@@ -43,6 +41,10 @@ class BookingControllerIntegrationTest {
     }
 
     // ------- Happy Path --------
+
+    @Test
+    void contextLoads() {
+    }
 
     @Test
     void shouldCreateEventSuccessfully() throws Exception {
@@ -102,17 +104,4 @@ class BookingControllerIntegrationTest {
 
         return objectMapper.readValue(responseContent, EventResponseDTO.class);
     }
-
-    private List<EventResponseDTO> getResultDTOList(ResultActions resultActions) throws Exception {
-        String responseContent = resultActions
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        return objectMapper.readValue(
-                responseContent,
-                new TypeReference<List<EventResponseDTO>>() {
-                });
-    }
-
 }
