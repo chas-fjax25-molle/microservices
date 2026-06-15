@@ -1,36 +1,65 @@
 spring:
     application:
         name: api-gateway
+
     main:
         web-application-type: reactive
-    cloud:
-        gateway:
-            server:
-                webflux:
-                    routes:
-                        - id: user-service
-                          uri: lb://user-service
-                          predicates:
-                              - Path=/api/user-service/**
-                          filters:
-                              - StripPrefix=2
-                              - AddRequestHeader=X-Service-Name,user-service
-                        - id: booking-service
-                          uri: lb://booking-service
-                          predicates:
-                              - Path=/api/booking-service/**
-                          filters:
-                              - StripPrefix=2
-                              - AddRequestHeader=X-Service-Name,booking-service
 
+    cloud:
+        discovery:
+            enabled: true
+
+        gateway:
+            discovery:
+                locator:
+                    enabled: true
+                    lower-case-service-id: true
+            # Define routes for user-service and booking-service
+            routes:
+                - id: user-service
+                  uri: lb://user-service
+                  predicates:
+                      - Path=/api/user-service/**
+                  filters:
+                      - StripPrefix=2
+                      - AddRequestHeader=X-Service-Name,user-service
+                      - name: RequestRateLimiter
+                        #args:
+                        #key-resolver: "#{@userKeyResolver}"
+                        #redis-rate-limiter.replenishRate: 10
+                        #redis-rate-limiter.burstCapacity: 20
+                        #redis-rate-limiter.requestedTokens: 1
+
+                - id: booking-service
+                  uri: lb://booking-service
+                  predicates:
+                      - Path=/api/booking-service/**
+                  filters:
+                      - StripPrefix=2
+                      - AddRequestHeader=X-Service-Name,booking-service
+                      #- name: RequestRateLimiter
+                      #args:
+                      #key-resolver: "#{@userKeyResolver}"
+                      #redis-rate-limiter.replenishRate: 10
+                      #redis-rate-limiter.burstCapacity: 20
+                      #redis-rate-limiter.requestedTokens: 1
+    # Redis configuration for rate limiting
+    data:
+        redis:
+            host: redis
+            port: 6379
+
+#Eureka client configuration to register with the service registry
 eureka:
     client:
         serviceUrl:
             defaultZone: http://service-registry:8761/eureka/
 
+#Enable SpringDoc for API documentation
 springdoc:
     api-docs:
         enabled: true
+
     swagger-ui:
         enabled: true
         path: /swagger-ui.html
