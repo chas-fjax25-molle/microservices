@@ -1,15 +1,42 @@
 spring:
     application:
         name: api-gateway
+    main:
+        web-application-type: reactive
     cloud:
         gateway:
-            discovery:
-                locator:
-                    enabled: true
-                    lower-case-service-id: true
+            server:
+                webflux:
+                    routes:
+                        - id: user-service
+                          uri: lb://user-service
+                          predicates:
+                              - Path=/api/user-service/**
+                          filters:
+                              - StripPrefix=2
+                              - AddRequestHeader=X-Service-Name,user-service
+                        - id: booking-service
+                          uri: lb://booking-service
+                          predicates:
+                              - Path=/api/booking-service/**
+                          filters:
+                              - StripPrefix=2
+                              - AddRequestHeader=X-Service-Name,booking-service
 
-        routes:
-            - id: user-service
-              uri: lb://user-service
-              predicates:
-                  - Path=/api/user-service/**
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://service-registry:8761/eureka/
+
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        config-url: /v3/api-docs/swagger-config
+        urls:
+            - name: User Service
+              url: /api/user-service/v3/api-docs
+            - name: Booking Service
+              url: /api/booking-service/v3/api-docs
