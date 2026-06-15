@@ -62,7 +62,7 @@ class BookingControllerIntegrationTest {
         ResultActions postedBookingResult = performPost(bookingRegistrationDto);
         BookingResponseDTO postedBookingResponse = getResultDTO(postedBookingResult);
 
-        ResultActions foundBookingResult = performGetById(postedBookingResponse.id()).andExpect(status().isFound());
+        ResultActions foundBookingResult = performGetById(postedBookingResponse.id()).andExpect(status().isOk());
         BookingResponseDTO foundBookingResponse = getResultDTO(foundBookingResult);
         assertEquals(postedBookingResponse.id(), foundBookingResponse.id());
     }
@@ -104,6 +104,101 @@ class BookingControllerIntegrationTest {
         BookingResponseDTO postedBookingResponse = getResultDTO(postedBookingResult);
 
         performDelete(postedBookingResponse.id()).andExpect(status().isNoContent());
+    }
+
+    // ---- Unhappy path ----
+
+    // ---- 400 Bad Request ----
+
+    @Test
+    void shouldReturnBadRequestWhenMalformedJson() throws Exception {
+        mockMvc.perform(post(uri)
+                .contentType(mt)
+                .content("{invalid json}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenEventIdIsNull() throws Exception {
+        BookingRegistarationDTO badBooking = new BookingRegistarationDTO(null, UUID.randomUUID());
+        performPost(badBooking).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenUserIdIsNull() throws Exception {
+        BookingRegistarationDTO badBooking = new BookingRegistarationDTO(UUID.randomUUID(), null);
+        performPost(badBooking).andExpect(status().isBadRequest());
+    }
+
+@Test
+void shouldReturnBadRequestWhenPathVariableIsNotUUID() throws Exception {
+    mockMvc.perform(get(uri + "/not-a-uuid"))
+            .andExpect(status().isBadRequest());
+}
+
+@Test
+void shouldReturnBadRequestWhenPathVariableIsInvalidUUIDFormat() throws Exception {
+    mockMvc.perform(get(uri + "/12345"))
+            .andExpect(status().isBadRequest());
+}
+
+@Test
+void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
+    BookingRegistarationDTO update = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
+    mockMvc.perform(put(uri + "/invalid-uuid")
+            .contentType(mt)
+            .content(objectMapper.writeValueAsString(update)))
+            .andExpect(status().isBadRequest());
+}
+
+@Test
+void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exception {
+    mockMvc.perform(delete(uri + "/abc-def-ghi"))
+            .andExpect(status().isBadRequest());
+}
+
+
+
+
+    // ---- 404 Not Found ----
+
+    @Test
+    void shouldReturnNotFoundWhenGettingNonexistentBooking() throws Exception {
+        UUID fakeId = UUID.randomUUID();
+        performGetById(fakeId).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUpdatingNonexistentBooking() throws Exception {
+        UUID fakeId = UUID.randomUUID();
+        BookingRegistarationDTO update = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        performPut(fakeId, update).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenDeletingNonexistentBooking() throws Exception {
+        UUID fakeId = UUID.randomUUID();
+        performDelete(fakeId).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenBookingWithNonexistentEvent() throws Exception {
+        UUID nonexistentEventId = UUID.randomUUID();
+        BookingRegistarationDTO bookingWithFakeEvent = new BookingRegistarationDTO(
+                nonexistentEventId,
+                UUID.randomUUID());
+        performPost(bookingWithFakeEvent).andExpect(status().isNotFound());
+    }
+
+    // ---- 415 Unsupported Media Type ----
+    
+    @Test
+    void shouldReturnUnsupportedMediaTypeWhenContentTypeNotSupported() throws Exception {
+        BookingRegistarationDTO dto = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        mockMvc.perform(post(uri)
+                .contentType("application/xml")
+                .content("<booking/>"))
+                .andExpect(status().isUnsupportedMediaType());
     }
 
     // ---- TestDto ----
@@ -169,7 +264,7 @@ class BookingControllerIntegrationTest {
         EventRegistrationDTO eventRegistrationDTO = new EventRegistrationDTO(
                 "test",
                 "testing",
-                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(1),
                 "here",
                 10);
 

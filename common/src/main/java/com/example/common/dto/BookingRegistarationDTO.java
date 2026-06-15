@@ -2,10 +2,10 @@ package com.example.common.dto;
 
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 public record BookingRegistarationDTO(
-        @NotEmpty UUID eventId,
-        @NotEmpty UUID userId) {
+        @NotNull UUID eventId,
+        @NotNull UUID userId) {
 
 }

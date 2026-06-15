@@ -6,8 +6,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.common.dto.BookingRegistarationDTO;
 import com.example.common.dto.BookingResponseDTO;
-import com.example.common.dto.EventRegistrationDTO;
-import com.example.common.dto.EventResponseDTO;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,13 +33,13 @@ public class BookingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookingResponseDTO postMethodName(@RequestBody BookingRegistarationDTO booking) {
+    public BookingResponseDTO createBooking(@RequestBody @Valid BookingRegistarationDTO booking) {
         return bookingService.createBooking(booking);
     }
 
     @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.FOUND)
-    public BookingResponseDTO getBookingById(@PathVariable UUID id) {
+    @ResponseStatus(HttpStatus.OK)
+    public BookingResponseDTO getBookingById(@PathVariable @NotNull UUID id) {
         return bookingService.getBookingById(id);
     }
 
@@ -50,13 +51,13 @@ public class BookingController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public BookingResponseDTO updateBooking(@PathVariable UUID id, @RequestBody BookingRegistarationDTO update) {
+    public BookingResponseDTO updateBooking(@PathVariable @NotNull UUID id, @RequestBody @Valid BookingRegistarationDTO update) {
         return bookingService.update(id, update);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteBookingById(@PathVariable UUID id) {
+    public void deleteBookingById(@PathVariable @NotNull UUID id) {
         bookingService.delete(id);
     }
 }
