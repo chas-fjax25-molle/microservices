@@ -194,7 +194,6 @@ void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exce
     
     @Test
     void shouldReturnUnsupportedMediaTypeWhenContentTypeNotSupported() throws Exception {
-        BookingRegistarationDTO dto = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(post(uri)
                 .contentType("application/xml")
                 .content("<booking/>"))
