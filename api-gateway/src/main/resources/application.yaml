@@ -1,6 +1,7 @@
 spring:
     application:
         name: api-gateway
+
     main:
         web-application-type: reactive
     data:
@@ -46,14 +47,17 @@ spring:
                                     "[redis-rate-limiter.burstCapacity]": 20
                                     "[redis-rate-limiter.requestedTokens]": 1
 
+#Eureka client configuration to register with the service registry
 eureka:
     client:
         serviceUrl:
             defaultZone: http://service-registry:8761/eureka/
 
+#Enable SpringDoc for API documentation
 springdoc:
     api-docs:
         enabled: true
+
     swagger-ui:
         enabled: true
         path: /swagger-ui.html
