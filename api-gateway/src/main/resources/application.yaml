@@ -3,8 +3,18 @@ spring:
         name: api-gateway
     main:
         web-application-type: reactive
+    data:
+        redis:
+            host: redis
+            port: 6379
     cloud:
+        discovery:
+            enabled: true
         gateway:
+            discovery:
+                locator:
+                    enabled: true
+                    lower-case-service-id: true
             server:
                 webflux:
                     routes:
@@ -15,6 +25,13 @@ spring:
                           filters:
                               - StripPrefix=2
                               - AddRequestHeader=X-Service-Name,user-service
+                              - name: RequestRateLimiter
+                                args:
+                                    key-resolver: "#{@userKeyResolver}"
+                                    "[redis-rate-limiter.replenishRate]": 10
+                                    "[redis-rate-limiter.burstCapacity]": 20
+                                    "[redis-rate-limiter.requestedTokens]": 1
+
                         - id: booking-service
                           uri: lb://booking-service
                           predicates:
@@ -22,6 +39,12 @@ spring:
                           filters:
                               - StripPrefix=2
                               - AddRequestHeader=X-Service-Name,booking-service
+                              - name: RequestRateLimiter
+                                args:
+                                    key-resolver: "#{@userKeyResolver}"
+                                    "[redis-rate-limiter.replenishRate]": 10
+                                    "[redis-rate-limiter.burstCapacity]": 20
+                                    "[redis-rate-limiter.requestedTokens]": 1
 
 eureka:
     client:
