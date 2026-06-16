@@ -6,9 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
+@Table(name = "booking", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"userId", "eventId"})
+})
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,11 +35,6 @@ public class Booking {
 
     public UUID getId() {
         return id;
-    }
-
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
 

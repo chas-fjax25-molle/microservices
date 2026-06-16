@@ -1,6 +1,6 @@
 package com.example.booking;
 
-import com.example.common.dto.BookingRegistarationDTO;
+import com.example.common.dto.BookingRegistrarationDTO;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
 
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -128,7 +129,7 @@ class EventControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
-        BookingRegistarationDTO update = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        BookingRegistrarationDTO update = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(put(uri + "/invalid-uuid")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)))
@@ -191,7 +192,7 @@ class EventControllerIntegrationTest {
                 .accept("application/xml"))
                 .andExpect(status().isNotAcceptable());
     }
-    
+
     // ---- TestDto ----
 
     private EventRegistrationDTO getTestEventRegistrationDTO() {

@@ -20,7 +20,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.example.common.dto.BookingRegistarationDTO;
+import com.example.common.dto.BookingRegistrarationDTO;
 import com.example.common.dto.BookingResponseDTO;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
@@ -48,7 +48,7 @@ class BookingControllerIntegrationTest {
     @Test
     void shouldCreateBookingWithExistingEventAndValidUserIdFormatSuccessfully() throws Exception {
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
-        BookingRegistarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
+        BookingRegistrarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
 
         ResultActions bookingResult = performPost(bookingRegistrationDto).andExpect(status().isCreated());
         BookingResponseDTO bookingResponse = getResultDTO(bookingResult);
@@ -58,7 +58,7 @@ class BookingControllerIntegrationTest {
     @Test
     void shouldFindBookingByIdSuccessfully() throws Exception {
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
-        BookingRegistarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
+        BookingRegistrarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
         ResultActions postedBookingResult = performPost(bookingRegistrationDto);
         BookingResponseDTO postedBookingResponse = getResultDTO(postedBookingResult);
 
@@ -68,9 +68,9 @@ class BookingControllerIntegrationTest {
     }
 
     @Test
-    void shouldFindAllEvents() throws Exception {
+    void shouldFindAllBookings() throws Exception {
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
-        BookingRegistarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
+        BookingRegistrarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
         performPost(bookingRegistrationDto);
         eventResponseDto = postTestEventRegistrationDTO();
         bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
@@ -82,14 +82,32 @@ class BookingControllerIntegrationTest {
     }
 
     @Test
+    void shouldFindTwoOfThreeBookingsByUserId() throws Exception {
+        EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
+        UUID userId = UUID.randomUUID();
+        BookingRegistrarationDTO bookingRegistrationDto = new BookingRegistrarationDTO(eventResponseDto.id(), userId);
+        performPost(bookingRegistrationDto);
+        eventResponseDto = postTestEventRegistrationDTO();
+        bookingRegistrationDto = new BookingRegistrarationDTO(eventResponseDto.id(), userId);
+        performPost(bookingRegistrationDto);
+        eventResponseDto = postTestEventRegistrationDTO();
+        bookingRegistrationDto = new BookingRegistrarationDTO(eventResponseDto.id(), UUID.randomUUID());
+        performPost(bookingRegistrationDto);
+
+        ResultActions foundBookingResult = performGetAllBookingsByUserId(userId).andExpect(status().isOk());
+        List<BookingResponseDTO> bookings = getResultDTOList(foundBookingResult);
+        assertEquals(2, bookings.size());
+    }
+
+    @Test
     void shouldUpdateBookingSuccessfully() throws Exception {
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
-        BookingRegistarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
+        BookingRegistrarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
         ResultActions postedBookingResult = performPost(bookingRegistrationDto);
         BookingResponseDTO postedBookingResponse = getResultDTO(postedBookingResult);
 
         UUID updatedUuid = UUID.randomUUID();
-        BookingRegistarationDTO update = new BookingRegistarationDTO(updatedUuid, updatedUuid);
+        BookingRegistrarationDTO update = new BookingRegistrarationDTO(updatedUuid, updatedUuid);
 
         ResultActions response = performPut(postedBookingResponse.id(), update).andExpect(status().isOk());
         BookingResponseDTO updated = getResultDTO(response);
@@ -99,11 +117,24 @@ class BookingControllerIntegrationTest {
     @Test
     void shouldDeleteBookingSuccessfully() throws Exception {
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
-        BookingRegistarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
+        BookingRegistrarationDTO bookingRegistrationDto = getTestBookingRegistrationDTO(eventResponseDto.id());
         ResultActions postedBookingResult = performPost(bookingRegistrationDto);
         BookingResponseDTO postedBookingResponse = getResultDTO(postedBookingResult);
 
         performDelete(postedBookingResponse.id()).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldLimitUserToOneBookingPerEvent() throws Exception {
+        UUID userId = UUID.randomUUID();
+        EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
+        BookingRegistrarationDTO bookingRegistrationDto = new BookingRegistrarationDTO(eventResponseDto.id(), userId);
+        performPost(bookingRegistrationDto);
+        performPost(bookingRegistrationDto);
+
+        ResultActions foundBookingResult = performGetAllBookingsByUserId(userId).andExpect(status().isOk());
+        List<BookingResponseDTO> bookings = getResultDTOList(foundBookingResult);
+        assertEquals(1, bookings.size());
     }
 
     // ---- Unhappy path ----
@@ -120,45 +151,42 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenEventIdIsNull() throws Exception {
-        BookingRegistarationDTO badBooking = new BookingRegistarationDTO(null, UUID.randomUUID());
+        BookingRegistrarationDTO badBooking = new BookingRegistrarationDTO(null, UUID.randomUUID());
         performPost(badBooking).andExpect(status().isBadRequest());
     }
 
     @Test
     void shouldReturnBadRequestWhenUserIdIsNull() throws Exception {
-        BookingRegistarationDTO badBooking = new BookingRegistarationDTO(UUID.randomUUID(), null);
+        BookingRegistrarationDTO badBooking = new BookingRegistrarationDTO(UUID.randomUUID(), null);
         performPost(badBooking).andExpect(status().isBadRequest());
     }
 
-@Test
-void shouldReturnBadRequestWhenPathVariableIsNotUUID() throws Exception {
-    mockMvc.perform(get(uri + "/not-a-uuid"))
-            .andExpect(status().isBadRequest());
-}
+    @Test
+    void shouldReturnBadRequestWhenPathVariableIsNotUUID() throws Exception {
+        mockMvc.perform(get(uri + "/not-a-uuid"))
+                .andExpect(status().isBadRequest());
+    }
 
-@Test
-void shouldReturnBadRequestWhenPathVariableIsInvalidUUIDFormat() throws Exception {
-    mockMvc.perform(get(uri + "/12345"))
-            .andExpect(status().isBadRequest());
-}
+    @Test
+    void shouldReturnBadRequestWhenPathVariableIsInvalidUUIDFormat() throws Exception {
+        mockMvc.perform(get(uri + "/12345"))
+                .andExpect(status().isBadRequest());
+    }
 
-@Test
-void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
-    BookingRegistarationDTO update = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
-    mockMvc.perform(put(uri + "/invalid-uuid")
-            .contentType(mt)
-            .content(objectMapper.writeValueAsString(update)))
-            .andExpect(status().isBadRequest());
-}
+    @Test
+    void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
+        BookingRegistrarationDTO update = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        mockMvc.perform(put(uri + "/invalid-uuid")
+                .contentType(mt)
+                .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isBadRequest());
+    }
 
-@Test
-void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exception {
-    mockMvc.perform(delete(uri + "/abc-def-ghi"))
-            .andExpect(status().isBadRequest());
-}
-
-
-
+    @Test
+    void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exception {
+        mockMvc.perform(delete(uri + "/abc-def-ghi"))
+                .andExpect(status().isBadRequest());
+    }
 
     // ---- 404 Not Found ----
 
@@ -171,7 +199,7 @@ void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exce
     @Test
     void shouldReturnNotFoundWhenUpdatingNonexistentBooking() throws Exception {
         UUID fakeId = UUID.randomUUID();
-        BookingRegistarationDTO update = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        BookingRegistrarationDTO update = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
         performPut(fakeId, update).andExpect(status().isNotFound());
     }
 
@@ -184,17 +212,17 @@ void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exce
     @Test
     void shouldReturnNotFoundWhenBookingWithNonexistentEvent() throws Exception {
         UUID nonexistentEventId = UUID.randomUUID();
-        BookingRegistarationDTO bookingWithFakeEvent = new BookingRegistarationDTO(
+        BookingRegistrarationDTO bookingWithFakeEvent = new BookingRegistrarationDTO(
                 nonexistentEventId,
                 UUID.randomUUID());
         performPost(bookingWithFakeEvent).andExpect(status().isNotFound());
     }
 
     // ---- 415 Unsupported Media Type ----
-    
+
     @Test
     void shouldReturnUnsupportedMediaTypeWhenContentTypeNotSupported() throws Exception {
-        BookingRegistarationDTO dto = new BookingRegistarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        BookingRegistrarationDTO dto = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(post(uri)
                 .contentType("application/xml")
                 .content("<booking/>"))
@@ -203,15 +231,15 @@ void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exce
 
     // ---- TestDto ----
 
-    private BookingRegistarationDTO getTestBookingRegistrationDTO(UUID eventId) {
-        return new BookingRegistarationDTO(
+    private BookingRegistrarationDTO getTestBookingRegistrationDTO(UUID eventId) {
+        return new BookingRegistrarationDTO(
                 eventId,
                 UUID.randomUUID());
     }
 
     // ---- Controller calls -----
 
-    private ResultActions performPost(BookingRegistarationDTO registration) throws Exception {
+    private ResultActions performPost(BookingRegistrarationDTO registration) throws Exception {
         return mockMvc.perform(post(uri)
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(registration)));
@@ -225,7 +253,11 @@ void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exce
         return mockMvc.perform(get(uri));
     }
 
-    private ResultActions performPut(UUID id, BookingRegistarationDTO update) throws Exception {
+    private ResultActions performGetAllBookingsByUserId(UUID userId) throws Exception {
+        return mockMvc.perform(get(uri + "/user/" + userId));
+    }
+
+    private ResultActions performPut(UUID id, BookingRegistrarationDTO update) throws Exception {
         return mockMvc.perform(put(uri + "/" + id)
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)));

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.booking.feature.booking.model.Booking;
 import com.example.booking.feature.event.EventService;
-import com.example.common.dto.BookingRegistarationDTO;
+import com.example.common.dto.BookingRegistrarationDTO;
 import com.example.common.dto.BookingResponseDTO;
 
 @Service
@@ -22,7 +22,7 @@ public class BookingService {
         this.eventService = eventService;
     }
 
-    public BookingResponseDTO createBooking(BookingRegistarationDTO booking) {
+    public BookingResponseDTO createBooking(BookingRegistrarationDTO booking) {
         eventService.getById(booking.eventId());
         Booking savedBooking = bookingRepository.save(toBooking(booking));
         return toDto(savedBooking);
@@ -38,7 +38,7 @@ public class BookingService {
         return events.stream().map(this::toDto).toList();
     }
 
-    public BookingResponseDTO update(UUID id, BookingRegistarationDTO update) {
+    public BookingResponseDTO update(UUID id, BookingRegistrarationDTO update) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
         booking = updateBooking(booking, update);
         bookingRepository.save(booking);
@@ -50,9 +50,13 @@ public class BookingService {
         bookingRepository.deleteById(id);
     }
 
+    public List<BookingResponseDTO> getBookingsByUserId(UUID userId) {
+        return bookingRepository.findAllByUserId(userId).stream().map(this::toDto).toList();
+    }
+
     // Helpermethods
 
-    private Booking toBooking(BookingRegistarationDTO bookingDTO) {
+    private Booking toBooking(BookingRegistrarationDTO bookingDTO) {
         Booking booking = new Booking();
         booking.setEventId(bookingDTO.eventId());
         booking.setUserId(bookingDTO.userId());
@@ -66,7 +70,7 @@ public class BookingService {
                 booking.getUserId());
     }
 
-    private Booking updateBooking(Booking booking, BookingRegistarationDTO update) {
+    private Booking updateBooking(Booking booking, BookingRegistrarationDTO update) {
         booking.setEventId(update.eventId());
         booking.setUserId(update.userId());
         return booking;

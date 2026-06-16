@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.common.dto.BookingRegistarationDTO;
+import com.example.common.dto.BookingRegistrarationDTO;
 import com.example.common.dto.BookingResponseDTO;
 
 import jakarta.validation.Valid;
@@ -33,7 +33,7 @@ public class BookingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookingResponseDTO createBooking(@RequestBody @Valid BookingRegistarationDTO booking) {
+    public BookingResponseDTO createBooking(@RequestBody @Valid BookingRegistrarationDTO booking) {
         return bookingService.createBooking(booking);
     }
 
@@ -49,9 +49,15 @@ public class BookingController {
         return bookingService.getAllBookings();
     }
 
+    @GetMapping("/user/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<BookingResponseDTO> getBookings(@PathVariable @NotNull UUID userId) {
+        return bookingService.getBookingsByUserId(userId);
+    }
+
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public BookingResponseDTO updateBooking(@PathVariable @NotNull UUID id, @RequestBody @Valid BookingRegistarationDTO update) {
+    public BookingResponseDTO updateBooking(@PathVariable @NotNull UUID id, @RequestBody @Valid BookingRegistrarationDTO update) {
         return bookingService.update(id, update);
     }
 
