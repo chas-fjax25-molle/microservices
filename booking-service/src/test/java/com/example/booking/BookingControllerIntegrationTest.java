@@ -222,7 +222,6 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldReturnUnsupportedMediaTypeWhenContentTypeNotSupported() throws Exception {
-        BookingRegistrarationDTO dto = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(post(uri)
                 .contentType("application/xml")
                 .content("<booking/>"))
