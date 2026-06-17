@@ -10,6 +10,8 @@ import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
+import com.example.common.security.JwtUtil;
+import com.example.user.dto.TokenResponseDto;
 import com.example.user.exception.UserNotFoundException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
@@ -17,9 +19,11 @@ import com.example.user.repository.UserRepository;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     // User validate
@@ -93,5 +97,11 @@ public class UserService {
             throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
+    }
+
+    public TokenResponseDto loginAndCreateToken(LoginRequestDTO loginRequest){
+        UserResponseDTO user = validateUser(loginRequest);
+        String token = jwtUtil.generateToken(user.accountName(), user.id(), "USER");
+        return new TokenResponseDto(token);
     }
 }
