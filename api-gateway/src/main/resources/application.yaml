@@ -1,15 +1,20 @@
 spring:
     application:
         name: api-gateway
+    main:
+        web-application-type: reactive
     cloud:
+        discovery:
+            enabled: true
         gateway:
             discovery:
                 locator:
                     enabled: true
                     lower-case-service-id: true
-
-        routes:
-            - id: user-service
-              uri: lb://user-service
-              predicates:
-                  - Path=/api/user-service/**
+            server:
+                webflux:
+                    routes:
+                        - id: user-service
+                          uri: lb://user-service
+                          predicates:
+                              - Path=/api/user-service/**
