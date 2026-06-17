@@ -175,7 +175,7 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
-        BookingRegistrarationDTO update = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        BookingRegistrationDTO update = new BookingRegistrationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(put(uri + "/invalid-uuid")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)))
@@ -256,7 +256,7 @@ class BookingControllerIntegrationTest {
         return mockMvc.perform(get(uri + "/user/" + userId));
     }
 
-    private ResultActions performPut(UUID id, BookingRegistrarationDTO update) throws Exception {
+    private ResultActions performPut(UUID id, BookingRegistrationDTO update) throws Exception {
         return mockMvc.perform(put(uri + "/" + id)
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)));
