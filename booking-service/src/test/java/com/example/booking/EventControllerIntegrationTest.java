@@ -1,6 +1,6 @@
 package com.example.booking;
 
-import com.example.common.dto.BookingRegistrarationDTO;
+import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
 
@@ -129,7 +129,7 @@ class EventControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
-        BookingRegistrarationDTO update = new BookingRegistrarationDTO(UUID.randomUUID(), UUID.randomUUID());
+        BookingRegistrationDTO update = new BookingRegistrationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(put(uri + "/invalid-uuid")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)))

@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import jakarta.validation.constraints.NotNull;
 
-public record BookingRegistrarationDTO(
+public record BookingRegistrationDTO(
         @NotNull UUID eventId,
         @NotNull UUID userId) {
 
