@@ -16,42 +16,47 @@ import org.springframework.context.ApplicationContext;
         "spring.cloud.gateway.server.webflux.routes[0].uri=http://localhost:9090",
         "spring.cloud.gateway.server.webflux.routes[0].predicates[0]=Path=/api/user-service/**",
         "spring.cloud.gateway.server.webflux.routes[0].filters[0]=StripPrefix=2",
-        
+
         "spring.cloud.gateway.server.webflux.routes[0].filters[1].name=RequestRateLimiter",
         "spring.cloud.gateway.server.webflux.routes[0].filters[1].args.key-resolver=#{@userKeyResolver}",
         "spring.cloud.gateway.server.webflux.routes[0].filters[1].args.[redis-rate-limiter.replenishRate]=1",
         "spring.cloud.gateway.server.webflux.routes[0].filters[1].args.[redis-rate-limiter.burstCapacity]=1",
         "spring.cloud.gateway.server.webflux.routes[0].filters[1].args.[redis-rate-limiter.requestedTokens]=1",
-        
+
         "spring.data.redis.host=localhost",
         "spring.data.redis.port=6379",
 })
 public class RateLimitingTest {
     @Autowired
     private ApplicationContext context;
-    
-    private WebTestClient client;
 
-    @BeforeEach
-    void setupWebTestClient() {
-        client = WebTestClient.bindToApplicationContext(context).build();
-    }
+    private WebTestClient client;
 
     @Autowired
     private ReactiveStringRedisTemplate redis;
 
     @BeforeEach
+    void setup() {
+        setupWebTestClient();
+        setupWireMock();
+        clearRedis();
+    }
+
+    void setupWebTestClient() {
+        client = WebTestClient.bindToApplicationContext(context).build();
+    }
+
     void setupWireMock() {
         stubFor(
                 get(urlEqualTo("/test"))
                         .willReturn(
                                 okJson("""
                                         {
-                                          "status":"ok"
+                                        "status":"ok"
                                         }
                                         """)));
     }
-    @BeforeEach
+
     void clearRedis() {
         redis.getConnectionFactory()
                 .getReactiveConnection()
