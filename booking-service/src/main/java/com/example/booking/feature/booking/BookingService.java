@@ -3,6 +3,8 @@ package com.example.booking.feature.booking;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.booking.feature.booking.model.Booking;
@@ -23,13 +25,19 @@ public class BookingService {
     }
 
     public BookingResponseDTO createBooking(BookingRegistrationDTO booking) {
-        eventService.getById(booking.eventId());
-        Booking savedBooking = bookingRepository.save(toBooking(booking));
-        return toDto(savedBooking);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID userId = UUID.fromString(username);
+
+        Booking newBooking = new Booking();
+        newBooking.setEventId(booking.eventId());
+        newBooking.setUserId(userId);
+        bookingRepository.save(newBooking);
+        return toDto(newBooking);
     }
 
     public BookingResponseDTO getBookingById(UUID id) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
+        validateOwnership(booking.getUserId());
         return toDto(booking);
     }
 
@@ -40,17 +48,27 @@ public class BookingService {
 
     public BookingResponseDTO update(UUID id, BookingRegistrationDTO update) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
+        validateOwnership(booking.getUserId());
         booking = updateBooking(booking, update);
         bookingRepository.save(booking);
         return toDto(booking);
     }
 
     public void delete(UUID id) {
-        bookingRepository.findById(id).orElseThrow();
+        Booking booking = bookingRepository.findById(id).orElseThrow();
+        validateOwnership(booking.getUserId());
         bookingRepository.deleteById(id);
     }
 
     public List<BookingResponseDTO> getBookingsByUserId(UUID userId) {
+        UUID currentUserId = getCurrentUserId();
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!currentUserId.equals(userId) && !isAdmin) {
+            throw new AccessDeniedException("You can only view your own bookings");
+        }
         return bookingRepository.findAllByUserId(userId).stream().map(this::toDto).toList();
     }
 
@@ -66,13 +84,23 @@ public class BookingService {
     private BookingResponseDTO toDto(Booking booking) {
         return new BookingResponseDTO(
                 booking.getId(),
-                booking.getEventId(),
-                booking.getUserId());
+                booking.getEventId());
     }
 
     private Booking updateBooking(Booking booking, BookingRegistrationDTO update) {
         booking.setEventId(update.eventId());
-        booking.setUserId(update.userId());
         return booking;
+    }
+
+    private void validateOwnership(UUID bookingUserId) {
+        UUID currentUserId = getCurrentUserId();
+        if (!bookingUserId.equals(currentUserId)) {
+            throw new AccessDeniedException("You can only access your own bookings");
+        }
+    }
+
+    private UUID getCurrentUserId() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return UUID.fromString(username);
     }
 }
