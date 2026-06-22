@@ -1,8 +1,13 @@
 spring:
     application:
         name: api-gateway
+
     main:
         web-application-type: reactive
+    data:
+        redis:
+            host: redis
+            port: 6379
     cloud:
         discovery:
             enabled: true
@@ -18,3 +23,46 @@ spring:
                           uri: lb://user-service
                           predicates:
                               - Path=/api/user-service/**
+                          filters:
+                              - StripPrefix=2
+                              - AddRequestHeader=X-Service-Name,user-service
+                              - name: RequestRateLimiter
+                                args:
+                                    key-resolver: "#{@userKeyResolver}"
+                                    "[redis-rate-limiter.replenishRate]": 10
+                                    "[redis-rate-limiter.burstCapacity]": 20
+                                    "[redis-rate-limiter.requestedTokens]": 1
+
+                        - id: booking-service
+                          uri: lb://booking-service
+                          predicates:
+                              - Path=/api/booking-service/**
+                          filters:
+                              - StripPrefix=2
+                              - AddRequestHeader=X-Service-Name,booking-service
+                              - name: RequestRateLimiter
+                                args:
+                                    key-resolver: "#{@userKeyResolver}"
+                                    "[redis-rate-limiter.replenishRate]": 10
+                                    "[redis-rate-limiter.burstCapacity]": 20
+                                    "[redis-rate-limiter.requestedTokens]": 1
+
+#Eureka client configuration to register with the service registry
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://service-registry:8761/eureka/
+
+#Enable SpringDoc for API documentation
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        config-url: /v3/api-docs/swagger-config
+        urls:
+            - name: User Service
+              url: /api/user-service/v3/api-docs
+            - name: Booking Service
+              url: /api/booking-service/v3/api-docs
