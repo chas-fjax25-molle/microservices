@@ -98,10 +98,4 @@ public class UserService {
         }
         userRepository.deleteById(id);
     }
-
-    public TokenResponseDto loginAndCreateToken(LoginRequestDTO loginRequest){
-        UserResponseDTO user = validateUser(loginRequest);
-        String token = jwtUtil.generateToken(user.accountName(), user.id(), "USER");
-        return new TokenResponseDto(token);
-    }
 }
