@@ -11,7 +11,6 @@ import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
 import com.example.common.security.JwtUtil;
-import com.example.user.dto.TokenResponseDto;
 import com.example.user.exception.UserNotFoundException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
