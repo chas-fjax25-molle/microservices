@@ -1,15 +1,8 @@
 spring:
-  application:
-    name: booking-service
+    application:
+        name: booking-service
 
 eureka:
     client:
         serviceUrl:
             defaultZone: http://localhost:8761/eureka/
-
-springdoc:
-    api-docs:
-        enabled: true
-    swagger-ui:
-        enabled: true
-        path: /swagger-ui.html
