@@ -36,7 +36,8 @@ public class UserService {
         return new UserResponseDTO(
                 user.getId(),
                 user.getUsername(),
-                user.getEmail());
+                user.getEmail(),
+                user.getRole());
     }
 
     // Create user
@@ -45,13 +46,15 @@ public class UserService {
         user.setUsername(userRegisterDTO.username());
         user.setEmail(userRegisterDTO.email());
         user.setPassword(userRegisterDTO.password());
+        user.setRole("USER");
 
         User savedUser = userRepository.save(user);
 
         return new UserResponseDTO(
                 savedUser.getId(),
                 savedUser.getUsername(),
-                savedUser.getEmail());
+                savedUser.getEmail(),
+                savedUser.getRole());
     }
 
     // Get user by id
@@ -60,7 +63,8 @@ public class UserService {
                 .map(user -> new UserResponseDTO(
                         user.getId(),
                         user.getUsername(),
-                        user.getEmail()))
+                        user.getEmail(),
+                        user.getRole()))
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
@@ -84,7 +88,8 @@ public class UserService {
         return new UserResponseDTO(
                 id,
                 updatedUser.getUsername(),
-                updatedUser.getEmail());
+                updatedUser.getEmail(), 
+                updatedUser.getRole());
     }
 
     // Delete user
