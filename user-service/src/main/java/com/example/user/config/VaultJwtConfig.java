@@ -27,8 +27,7 @@ public class VaultJwtConfig extends AbstractVaultConfig {
         Map<String, String> keys = fetchJwtKeys(token);
 
         PublicKey publicKey = parsePublicKey(keys.get("public_key"));
-        PrivateKey privateKey = parsePrivateKey(keys.get("private_key"));
 
-        return new JwtUtil(publicKey, privateKey);
+        return new JwtUtil(publicKey);
     }
 }
