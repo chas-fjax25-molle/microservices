@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
-
 
 @RestController
 @RequestMapping("/api/user-service/users")
@@ -58,23 +58,6 @@ public class UserController {
     }
 
     /**
-     * Get the user details for a given ID.
-     * 
-     * @param id The ID of the user to get
-     * @return The user details for the given ID if it exists
-     */
-    @Operation(summary = "Get user by ID", description = "Fetches a ser by their niqe UUID.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User found"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUser(@PathVariable @NotNull @NonNull UUID id) {
-        return ResponseEntity.ok(userService.getUserById(id));
-    }
-
-    /**
      * Register a new user.
      * 
      * @param entity The user details to register
@@ -91,6 +74,24 @@ public class UserController {
     }
 
     /**
+     * Get the user details for a given ID.
+     * 
+     * @param id The ID of the user to get
+     * @return The user details for the given ID if it exists
+     */
+    @Operation(summary = "Get user by ID", description = "Fetches a user by their unique UUID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> getUser(
+            @PathVariable @NotNull UUID id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    /**
      * Update the user details for a given ID.
      * 
      * @param id     The ID of the user to update
@@ -102,8 +103,10 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable @NotNull @NonNull UUID id,
+    public ResponseEntity<UserResponseDTO> updateUser(
+            @PathVariable @NotNull UUID id,
             @RequestBody @Validated UserUpdateDTO entity) {
         return ResponseEntity.ok(userService.updateUser(id, entity));
     }
@@ -119,11 +122,31 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable @NotNull @NonNull UUID id) {
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable @NotNull @NonNull UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get current logged-in user")
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    @Operation(summary = "Update current logged-in user")
+    @PreAuthorize("hasRole('USER')")
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateMe(
+            Authentication authentication,
+            @RequestBody @Validated UserUpdateDTO entity) {
+        UUID userId = UUID.fromString(authentication.getName());
+        return ResponseEntity.ok(userService.updateUser(userId, entity));
     }
 
 }
