@@ -1,5 +1,7 @@
 package com.example.gateway.service;
 
+import java.nio.file.AccessDeniedException;
+
 import org.springframework.stereotype.Service;
 
 import com.example.common.dto.LoginRequestDTO;
@@ -18,12 +20,12 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    public String login(LoginRequestDTO dto) {
+    public String login(LoginRequestDTO dto) throws AccessDeniedException {
 
         UserResponseDTO user = userServiceClient.validateLogin(dto).getBody();
 
         if (user == null) {
-            throw new RuntimeException("Invalid credentials");
+            throw new AccessDeniedException("Invalid credentials");
         }
 
         return jwtUtil.generateToken(user.username(), user.id(), user.role());
