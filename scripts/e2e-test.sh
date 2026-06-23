@@ -41,6 +41,53 @@ for i in $(seq 1 "$MAX_RETRIES"); do
     sleep "$RETRY_INTERVAL"
 done
 
+echo "=== Waiting for all services to register with Eureka ==="
+SERVICES=("API-GATEWAY" "USER-SERVICE" "BOOKING-SERVICE")
+SERVICE_LABELS=("api-gateway" "user-service" "booking-service")
+EUREKA_URL="http://localhost:8761/eureka/apps"
+for s in $(seq 1 "$MAX_RETRIES"); do
+    ALL_UP=true
+    for j in "${!SERVICES[@]}"; do
+        STATUS=$(curl -s "${EUREKA_URL}/${SERVICES[$j]}" 2>/dev/null | \
+            grep -oE '<status>[A-Z]+</status>' | grep -oE '[A-Z]+')
+        if [ "$STATUS" != "UP" ]; then
+            ALL_UP=false
+            break
+        fi
+    done
+    if [ "$ALL_UP" = true ]; then
+        echo "All services registered: ${SERVICE_LABELS[*]}"
+        break
+    fi
+    if [ "$s" -eq "$MAX_RETRIES" ]; then
+        echo "ERROR: Services did not register in time"
+        for j in "${!SERVICES[@]}"; do
+            echo "  ${SERVICE_LABELS[$j]}: $(curl -s "${EUREKA_URL}/${SERVICES[$j]}" | grep -oE '<status>[A-Z]+</status>' | grep -oE '[A-Z]+' || echo 'not found')"
+        done
+        docker compose logs --tail=50 api-gateway service-registry vault
+        exit 1
+    fi
+    echo "Waiting for services... (${s}/${MAX_RETRIES})"
+    sleep "$RETRY_INTERVAL"
+done
+
+echo "=== Verifying load balancer can resolve user-service ==="
+for s in $(seq 1 30); do
+    LB_PROBE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 \
+        "$GATEWAY_URL/api/user-service/v3/api-docs" 2>/dev/null || true)
+    if [ "$LB_PROBE" = "200" ]; then
+        echo "Load balancer is ready!"
+        break
+    fi
+    if [ "$s" -eq 30 ]; then
+        echo "ERROR: Load balancer did not resolve user-service in time (last status: $LB_PROBE)"
+        docker compose logs --tail=30 api-gateway
+        exit 1
+    fi
+    echo "Waiting for load balancer... (${s}/30)"
+    sleep 2
+done
+
 echo ""
 echo "=== 1. Register user ==="
 REGISTER_RESPONSE=$(curl -s -X POST "$GATEWAY_URL/api/gateway/users/register" \
