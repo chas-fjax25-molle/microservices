@@ -3,6 +3,7 @@ package com.example.user.service;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -10,6 +11,7 @@ import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
+import com.example.user.exception.DuplicateUserException;
 import com.example.user.exception.UserNotFoundException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
@@ -17,20 +19,18 @@ import com.example.user.repository.UserRepository;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    // User validate
     public UserResponseDTO validateUser(LoginRequestDTO loginRequest) {
-        if (loginRequest.username().isEmpty() || loginRequest.password().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password cannot be blank");
-        }
         User user = userRepository.findByUsername(loginRequest.username())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
-        if (!user.getPassword().equals(loginRequest.password())) {
+        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
         return new UserResponseDTO(
@@ -39,12 +39,18 @@ public class UserService {
                 user.getEmail());
     }
 
-    // Create user
     public UserResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        if (userRepository.existsByUsername(userRegisterDTO.username())) {
+            throw new DuplicateUserException("username", userRegisterDTO.username());
+        }
+        if (userRepository.existsByEmail(userRegisterDTO.email())) {
+            throw new DuplicateUserException("email", userRegisterDTO.email());
+        }
+
         User user = new User();
         user.setUsername(userRegisterDTO.username());
         user.setEmail(userRegisterDTO.email());
-        user.setPassword(userRegisterDTO.password());
+        user.setPassword(passwordEncoder.encode(userRegisterDTO.password()));
 
         User savedUser = userRepository.save(user);
 
@@ -54,7 +60,6 @@ public class UserService {
                 savedUser.getEmail());
     }
 
-    // Get user by id
     public UserResponseDTO getUserById(UUID id) {
         return userRepository.findById(id)
                 .map(user -> new UserResponseDTO(
@@ -64,7 +69,6 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    // Update user
     public UserResponseDTO updateUser(UUID id, UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -76,7 +80,7 @@ public class UserService {
             user.setEmail(userUpdateDTO.newEmail());
         }
         if (userUpdateDTO.newPassword() != null) {
-            user.setPassword(userUpdateDTO.newPassword());
+            user.setPassword(passwordEncoder.encode(userUpdateDTO.newPassword()));
         }
 
         User updatedUser = userRepository.save(user);
@@ -87,7 +91,6 @@ public class UserService {
                 updatedUser.getEmail());
     }
 
-    // Delete user
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
