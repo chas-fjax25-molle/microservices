@@ -19,14 +19,14 @@ public class AuthService {
     }
 
     public String login(LoginRequestDTO dto) {
-        
+
         UserResponseDTO user = userServiceClient.validateLogin(dto).getBody();
 
         if (user == null) {
             throw new RuntimeException("Invalid credentials");
         }
-        
-        return jwtUtil.generateToken(user.userName(), user.id(), user.role());
+
+        return jwtUtil.generateToken(user.username(), user.id(), user.role());
     }
-    
+
 }
