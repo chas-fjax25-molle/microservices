@@ -11,7 +11,7 @@ import com.example.common.vault.AbstractVaultConfig;
 public class JwtConfig extends AbstractVaultConfig {
 
     public JwtConfig(
-        @Value("${vault.addr}") String vaultAddr,
+        @Value("${vault.addr:http://localhost:8200/}") String vaultAddr,
         @Value("${vault.token:}") String vaultToken,
         @Value("${spring.application.name}") String serviceName) {
         super(vaultAddr, vaultToken, serviceName);

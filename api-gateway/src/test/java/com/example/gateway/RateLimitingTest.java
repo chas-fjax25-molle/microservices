@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import com.example.common.security.JwtUtil;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import org.springframework.context.ApplicationContext;
@@ -27,6 +30,10 @@ import org.springframework.context.ApplicationContext;
         "spring.data.redis.port=6379",
 })
 public class RateLimitingTest {
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
     @Autowired
     private ApplicationContext context;
 
