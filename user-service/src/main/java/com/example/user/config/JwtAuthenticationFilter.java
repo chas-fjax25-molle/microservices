@@ -2,6 +2,7 @@ package com.example.user.config;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -45,11 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String username = jwtUtil.getUsernameFromToken(token);
+        UUID userId = jwtUtil.getIdFromToken(token);
         String role = jwtUtil.getRoleFromToken(token).orElse("USER");
 
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-        var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+        var authentication = new UsernamePasswordAuthenticationToken(userId.toString(), null, authorities);
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

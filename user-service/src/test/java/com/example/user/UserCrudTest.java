@@ -1,6 +1,7 @@
 package com.example.user;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.mockito.Mockito.when;
 
 
@@ -35,11 +37,11 @@ public class UserCrudTest {
     @BeforeEach
     void setUp() {
         when(jwtUtil.validateToken("user-token")).thenReturn(true);
-        when(jwtUtil.getUsernameFromToken("user-token")).thenReturn("testuser");
+        when(jwtUtil.getIdFromToken("user-token")).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         when(jwtUtil.getRoleFromToken("user-token")).thenReturn(Optional.of("USER"));
 
         when(jwtUtil.validateToken("admin-token")).thenReturn(true);
-        when(jwtUtil.getUsernameFromToken("admin-token")).thenReturn("admin");
+        when(jwtUtil.getIdFromToken("admin-token")).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         when(jwtUtil.getRoleFromToken("admin-token")).thenReturn(Optional.of("ADMIN"));
     }
 
@@ -162,5 +164,90 @@ public class UserCrudTest {
         mockMvc.perform(delete("/api/user-service/users/00000000-0000-0000-0000-000000000000")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getUserShouldBeForbiddenForUserRole() throws Exception {
+        String response = mockMvc.perform(post("/api/user-service/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"usera\", \"email\": \"usera@test.com\", \"password\": \"password123\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String userId = JsonPath.read(response, "$.id");
+
+        mockMvc.perform(get("/api/user-service/users/" + userId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateUserShouldBeForbiddenForUserRole() throws Exception {
+        String response = mockMvc.perform(post("/api/user-service/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"userb\", \"email\": \"userb@test.com\", \"password\": \"password123\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String userId = JsonPath.read(response, "$.id");
+
+        mockMvc.perform(patch("/api/user-service/users/" + userId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"newEmail\": \"hacker@test.com\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteUserShouldBeForbiddenForUserRole() throws Exception {
+        String response = mockMvc.perform(post("/api/user-service/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"userc\", \"email\": \"userc@test.com\", \"password\": \"password123\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String userId = JsonPath.read(response, "$.id");
+
+        mockMvc.perform(delete("/api/user-service/users/" + userId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getMeShouldReturnOwnData() throws Exception {
+        String response = mockMvc.perform(post("/api/user-service/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"selfuser\", \"email\": \"selfuser@test.com\", \"password\": \"password123\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String userId = JsonPath.read(response, "$.id");
+
+        when(jwtUtil.getIdFromToken("user-token")).thenReturn(UUID.fromString(userId));
+
+        mockMvc.perform(get("/api/user-service/users/me")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId));
+    }
+
+    @Test
+    void updateMeShouldUpdateOwnData() throws Exception {
+        String response = mockMvc.perform(post("/api/user-service/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\": \"selfupdater\", \"email\": \"selfupdater@test.com\", \"password\": \"password123\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        String userId = JsonPath.read(response, "$.id");
+
+        when(jwtUtil.getIdFromToken("user-token")).thenReturn(UUID.fromString(userId));
+
+        mockMvc.perform(patch("/api/user-service/users/me")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"newEmail\": \"updatedself@test.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("updatedself@test.com"));
     }
 }
