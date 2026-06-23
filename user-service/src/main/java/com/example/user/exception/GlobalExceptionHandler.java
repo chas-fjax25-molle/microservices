@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public String handleDataIntegrityViolation(DataIntegrityViolationException e) {
+    public String handleDataIntegrityViolation() {
         return "A conflict occurred due to duplicate data";
     }
 
@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleGeneralError(Exception e) {
+    public String handleGeneralError() {
         return "An unexpected error occurred";
     }
 }
