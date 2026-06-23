@@ -61,28 +61,28 @@ sequenceDiagram
     User->>Gateway: Send booking request with JWT
     Gateway->>BookingService: Forward request with JWT
     BookingService->>BookingService: Validate JWT
-    alt Invalid JWT
-        BookingService-->>Gateway: Return error
-        Gateway-->>User: Forward error
-    else Valid JWT
+    alt Valid JWT
         BookingService->>UserService: Check user exists
         UserService->>UserService: Validate user
-        alt User has been invalidated
-            UserService-->>BookingService: Return error
-            BookingService-->>Gateway: Return error
-            Gateway-->>User: Forward error
-        else User exists
+        alt User exists
             UserService-->>BookingService: Return user info
             BookingService->>BookingService: Validate booking request
-            alt Invalid booking request
-                BookingService-->>Gateway: Return error
-                Gateway-->>User: Forward error
-            else Valid booking request
+            alt Valid booking request
                 BookingService->>BookingService: Create booking
                 BookingService-->>Gateway: Return booking confirmation
                 Gateway-->>User: Forward confirmation
+            else Invalid booking request
+                BookingService-->>Gateway: Return error
+                Gateway-->>User: Forward error
             end
+        else User has been invalidated
+            UserService-->>BookingService: Return error
+            BookingService-->>Gateway: Return error
+            Gateway-->>User: Forward error
         end
+    else Invalid JWT
+        BookingService-->>Gateway: Return error
+        Gateway-->>User: Forward error
     end
 
 ```
