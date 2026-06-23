@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Sql(statements = """
         DELETE FROM USERS;
         INSERT INTO USERS (ID, USERNAME, EMAIL, PASSWORD) VALUES
-            ('00000000-0000-0000-0000-000000000000', 'test', 'test@test.com', '1234')
+            ('00000000-0000-0000-0000-000000000000', 'test', 'test@test.com', '$2a$10$atK1n5eeBXD03vX.5LNqDe5ErjrmLZbBiFlctpGJlQawuz6yJCROm')
             """)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc(addFilters = false)
