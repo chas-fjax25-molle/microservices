@@ -13,4 +13,10 @@ public class GlobalExceptionHandler {
     public String handleUserNotFound(UserNotFoundException e) {
         return e.getMessage();
     }
+
+    @ExceptionHandler(DuplicateUserException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleDuplicateUser(DuplicateUserException e) {
+        return e.getMessage();
+    }
 }

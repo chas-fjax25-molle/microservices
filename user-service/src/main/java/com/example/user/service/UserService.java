@@ -12,6 +12,7 @@ import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
 import com.example.common.security.JwtUtil;
+import com.example.user.exception.DuplicateUserException;
 import com.example.user.exception.UserNotFoundException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
@@ -45,6 +46,13 @@ public class UserService {
     }
 
     public UserResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        if (userRepository.existsByUsername(userRegisterDTO.username())) {
+            throw new DuplicateUserException("username", userRegisterDTO.username());
+        }
+        if (userRepository.existsByEmail(userRegisterDTO.email())) {
+            throw new DuplicateUserException("email", userRegisterDTO.email());
+        }
+
         User user = new User();
         user.setUsername(userRegisterDTO.username());
         user.setEmail(userRegisterDTO.email());
