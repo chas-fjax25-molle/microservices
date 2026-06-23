@@ -11,7 +11,6 @@ import com.example.common.dto.LoginRequestDTO;
 import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.common.dto.UserUpdateDTO;
-import com.example.common.security.JwtUtil;
 import com.example.user.exception.DuplicateUserException;
 import com.example.user.exception.UserNotFoundException;
 import com.example.user.model.User;
@@ -20,19 +19,14 @@ import com.example.user.repository.UserRepository;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
 
     public UserResponseDTO validateUser(LoginRequestDTO loginRequest) {
-        if (loginRequest.username().isEmpty() || loginRequest.password().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password cannot be blank");
-        }
         User user = userRepository.findByUsername(loginRequest.username())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));

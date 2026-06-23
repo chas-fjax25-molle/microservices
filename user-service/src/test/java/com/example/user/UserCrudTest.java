@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.HttpHeaders;
 import com.example.common.security.JwtUtil;
 import org.springframework.http.MediaType;
-import com.example.user.model.User;
 import com.jayway.jsonpath.JsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,11 +46,6 @@ public class UserCrudTest {
 
     @Test
     void registerUserShouldReturnCreated() throws Exception {
-        User user = new User();
-        user.setUsername("testuser");
-        user.setEmail("testuser@example.com");
-        user.setPassword("password123");
-
         mockMvc.perform(post("/api/user-service/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -61,11 +55,6 @@ public class UserCrudTest {
 
     @Test
     void registerUserShouldReturnBadRequestWhenUsernameIsBlank() throws Exception {
-        User user = new User();
-        user.setUsername("");
-        user.setEmail("testuser@example.com");
-        user.setPassword("password123");
-
         mockMvc.perform(post("/api/user-service/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"username\": \"\", \"email\": \"testuser@example.com\", \"password\": \"password123\"}"))
@@ -137,11 +126,6 @@ public class UserCrudTest {
 
     @Test
     void deleteUserShouldReturnNoContent() throws Exception {
-        User user = new User();
-        user.setUsername("testuser4");
-        user.setEmail("testuser4@example.com");
-        user.setPassword("password123");
-
         String registerResponse = mockMvc.perform(post("/api/user-service/users/register")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token")
                 .contentType(MediaType.APPLICATION_JSON)
