@@ -6,7 +6,7 @@ services:
         cap_add:
             - IPC_LOCK
         environment:
-            VAULT_ADDR: http://127.0.0.1:8200
+            VAULT_ADDR: http://127.0.0.1:8200/
         volumes:
             - ./vault/config:/vault/config:ro
             - ./vault/init.sh:/vault/init.sh:ro
@@ -32,7 +32,7 @@ services:
                 condition: service_healthy
         environment:
             SERVER_PORT: 8761
-            VAULT_ADDR: http://vault:8200
+            VAULT_ADDR: http://vault:8200/
             EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
         volumes:
             - vault-secrets:/run/secrets:ro
@@ -53,7 +53,7 @@ services:
                 condition: service_healthy
         environment:
             SERVER_PORT: 8082
-            VAULT_ADDR: http://vault:8200
+            VAULT_ADDR: http://vault:8200/
             EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
         volumes:
             - vault-secrets:/run/secrets:ro
@@ -69,7 +69,7 @@ services:
                 condition: service_healthy
         environment:
             SERVER_PORT: 8083
-            VAULT_ADDR: http://vault:8200
+            VAULT_ADDR: http://vault:8200/
             EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
         volumes:
             - vault-secrets:/run/secrets:ro
@@ -98,7 +98,8 @@ services:
                 condition: service_healthy
         environment:
             SERVER_PORT: 8080
-            VAULT_ADDR: http://vault:8200
+            VAULT_ADDR: http://vault:8200/
+            EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
         volumes:
             - vault-secrets:/run/secrets:ro
         ports:
