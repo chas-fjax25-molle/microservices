@@ -85,14 +85,14 @@ public class UserCrudTest {
         String userId = JsonPath.read(registerResponse, "$.id");
 
         mockMvc.perform(get("/api/user-service/users/" + userId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token"))
                 .andExpect(status().isOk());
 
     }
     @Test
     void getUserByIdShouldReturnNotFound() throws Exception {
         mockMvc.perform(get("/api/user-service/users/00000000-0000-0000-0000-000000000000")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token"))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token"))
                 .andExpect(status().isNotFound());
     }
 
@@ -111,7 +111,7 @@ public class UserCrudTest {
         String userId = JsonPath.read(registerResponse, "$.id");
 
         mockMvc.perform(patch("/api/user-service/users/" + userId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
             {
@@ -126,7 +126,7 @@ public class UserCrudTest {
     @Test
     void updateUserShouldReturnNotFoundWithPatch() throws Exception {
         mockMvc.perform(patch("/api/user-service/users/00000000-0000-0000-0000-000000000000")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer admin-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                         "{\"username\": \"updateduser\", \"email\": \"updateduser@example.com\", \"password\": \"newpassword123\"}"))
