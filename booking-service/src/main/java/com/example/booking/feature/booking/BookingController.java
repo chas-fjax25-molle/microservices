@@ -37,10 +37,12 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    @Operation(summary = "Create a new booking", description = "Create a new booking for an event. Requires authentication.")
+    @Operation(summary = "Create a new booking", description = "Create a new booking for an event. Requires USER or ADMIN role.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Booking created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid booking data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions")
     })
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
@@ -49,11 +51,12 @@ public class BookingController {
         return bookingService.createBooking(booking);
     }
 
-    @Operation(summary = "Get booking by ID", description = "Retrieve a booking by its ID. Requires authentication.")
+    @Operation(summary = "Get booking by ID", description = "Retrieve a booking by its ID. Users can only retrieve their own bookings; admins can retrieve any booking.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Booking retrieved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid booking ID"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions to access this booking"),
             @ApiResponse(responseCode = "404", description = "Booking not found")
     })
     @GetMapping("/{id}")
@@ -63,27 +66,27 @@ public class BookingController {
         return bookingService.getBookingById(id);
     }
 
-    @Operation(summary = "Get all bookings", description = "Retrieve a list of all bookings. Requires admin authentication.")
+    @Operation(summary = "Get all bookings", description = "Retrieve a list of all bookings. Requires ADMIN role only.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Bookings retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Only ADMIN can retrieve all bookings"),
             @ApiResponse(responseCode = "404", description = "Bookings not found")
     })
     @GetMapping
-    @PreAuthorize("hasRole ('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public List<BookingResponseDTO> getBookings() {
         return bookingService.getAllBookings();
     }
 
-    @Operation(summary = "Get bookings by user ID", description = "Retrieve a list of bookings for a specific user. Requires authentication.")
+    @Operation(summary = "Get bookings by user ID", description = "Retrieve a list of bookings for a specific user. Users can only retrieve their own bookings; admins can retrieve any user's bookings.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Bookings retrieved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid user ID"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
-            @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "403", description = "Forbidden - Cannot retrieve bookings for other users unless ADMIN"),
+            @ApiResponse(responseCode = "404", description = "User or bookings not found")
     })
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
@@ -92,12 +95,12 @@ public class BookingController {
         return bookingService.getBookingsByUserId(userId);
     }
 
-    @Operation(summary = "Update a booking", description = "Update an existing booking by its ID. Requires authentication.")
+    @Operation(summary = "Update a booking", description = "Update an existing booking by its ID. Users can only update their own bookings; admins can update any booking.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Booking updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid booking ID or input data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Cannot update bookings for other users unless ADMIN"),
             @ApiResponse(responseCode = "404", description = "Booking not found")
     })
     @PutMapping("/{id}")
@@ -108,12 +111,12 @@ public class BookingController {
         return bookingService.update(id, update);
     }
 
-    @Operation(summary = "Delete a booking", description = "Delete an existing booking by its ID. Requires authentication.")
+    @Operation(summary = "Delete a booking", description = "Delete an existing booking by its ID. Users can only delete their own bookings; admins can delete any booking.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Booking deleted successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid booking ID"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Cannot delete bookings for other users unless ADMIN"),
             @ApiResponse(responseCode = "404", description = "Booking not found")
     })
     @DeleteMapping("/{id}")

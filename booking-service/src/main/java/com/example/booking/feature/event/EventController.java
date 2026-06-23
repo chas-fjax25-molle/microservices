@@ -34,12 +34,12 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    @Operation(summary = "Create a new event", description = "Create a new event. Requires admin role.")
+    @Operation(summary = "Create a new event", description = "Create a new event. Requires ADMIN role only.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Event created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions")
+            @ApiResponse(responseCode = "403", description = "Forbidden - Only ADMIN can create events")
     })
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
@@ -48,41 +48,35 @@ public class EventController {
         return eventService.create(registration);
     }
 
-    @Operation(summary = "Get event by ID", description = "Retrieve an event by its ID. Requires admin role.")
+    @Operation(summary = "Get event by ID", description = "Retrieve an event by its ID. Publicly accessible - all users can view event details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Event retrieved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid event ID"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
             @ApiResponse(responseCode = "404", description = "Event not found")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public EventResponseDTO getEventById(@PathVariable @NotNull UUID id) {
         return eventService.getById(id);
     }
 
-    @Operation(summary = "Get all events", description = "Retrieve a list of all events. Requires admin role.")
+    @Operation(summary = "Get all events", description = "Retrieve a list of all events. Publicly accessible - all users can browse available events.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Events retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
             @ApiResponse(responseCode = "404", description = "Events not found")
     })
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public List<EventResponseDTO> getEvents() {
         return eventService.getAllEvents();
     }
 
-    @Operation(summary = "Update an event", description = "Update an existing event by its ID. Requires admin role.")
+    @Operation(summary = "Update an event", description = "Update an existing event by its ID. Requires ADMIN role only.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Event updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid event ID or input data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Only ADMIN can update events"),
             @ApiResponse(responseCode = "404", description = "Event not found")
     })
     @PutMapping("/{id}")
@@ -93,12 +87,12 @@ public class EventController {
         return eventService.update(id, update);
     }
 
-    @Operation(summary = "Delete an event", description = "Delete an existing event by its ID. Requires admin role.")
+    @Operation(summary = "Delete an event", description = "Delete an existing event by its ID. Requires ADMIN role only.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Event deleted successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid event ID"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Only ADMIN can delete events"),
             @ApiResponse(responseCode = "404", description = "Event not found")
     })
     @DeleteMapping("/{id}")

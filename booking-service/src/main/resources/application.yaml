@@ -1,6 +1,6 @@
 spring:
-  application:
-    name: booking-service
+    application:
+        name: booking-service
 
 eureka:
     client:
