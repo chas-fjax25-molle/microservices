@@ -1,14 +1,19 @@
 package com.example.booking.feature.booking;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.example.booking.client.UserClient;
 import com.example.booking.feature.booking.model.Booking;
 import com.example.booking.feature.event.EventService;
 import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.BookingResponseDTO;
+import com.example.common.dto.UserResponseDTO;
 
 @Service
 public class BookingService {
@@ -17,12 +22,16 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
 
-    public BookingService(BookingRepository bookingRepository, EventService eventService) {
+    private final UserClient userClient;
+
+    public BookingService(BookingRepository bookingRepository, EventService eventService, UserClient userClient) {
         this.bookingRepository = bookingRepository;
         this.eventService = eventService;
+        this.userClient = userClient;
     }
 
     public BookingResponseDTO createBooking(BookingRegistrationDTO booking) {
+        validateUser(booking.userId());
         eventService.getById(booking.eventId());
         Booking savedBooking = bookingRepository.save(toBooking(booking));
         return toDto(savedBooking);
@@ -39,6 +48,7 @@ public class BookingService {
     }
 
     public BookingResponseDTO update(UUID id, BookingRegistrationDTO update) {
+        validateUser(update.userId());
         Booking booking = bookingRepository.findById(id).orElseThrow();
         booking = updateBooking(booking, update);
         bookingRepository.save(booking);
@@ -51,6 +61,7 @@ public class BookingService {
     }
 
     public List<BookingResponseDTO> getBookingsByUserId(UUID userId) {
+        validateUser(userId);
         return bookingRepository.findAllByUserId(userId).stream().map(this::toDto).toList();
     }
 
@@ -74,5 +85,14 @@ public class BookingService {
         booking.setEventId(update.eventId());
         booking.setUserId(update.userId());
         return booking;
+    }
+
+    private void validateUser(UUID id) {
+        ResponseEntity<UserResponseDTO> user = userClient.getUser(id);
+        HttpStatusCode status = user.getStatusCode();
+        System.out.println(status);
+        if (status != HttpStatusCode.valueOf(200)) {
+            throw new NoSuchElementException("User not found with ID: " + id);
+        }
     }
 }
