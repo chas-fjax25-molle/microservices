@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record BookingResponseDTO(
         UUID id,
-        UUID eventId) {
+        UUID eventId,
+        UUID userId) {
 
 }

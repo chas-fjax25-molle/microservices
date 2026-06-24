@@ -1,7 +1,6 @@
 package com.example.booking.feature.booking;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -9,7 +8,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.booking.feature.booking.model.Booking;
-import com.example.booking.feature.event.EventRepository;
 import com.example.booking.feature.event.EventService;
 import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.BookingResponseDTO;
@@ -18,33 +16,23 @@ import com.example.common.dto.BookingResponseDTO;
 public class BookingService {
 
     private final EventService eventService;
-    private final EventRepository eventRepository;
     private final BookingRepository bookingRepository;
 
-    public BookingService(BookingRepository bookingRepository, EventService eventService, EventRepository eventRepository) {
-        this.bookingRepository = bookingRepository;
+    public BookingService(EventService eventService, BookingRepository bookingRepository) {
         this.eventService = eventService;
-        this.eventRepository = eventRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     public BookingResponseDTO createBooking(BookingRegistrationDTO booking) {
-        if (!eventRepository.existsById(booking.eventId())) {
-            throw new NoSuchElementException("Event not found with ID: " + booking.eventId());
-        }
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID userId = UUID.fromString(username);
-
-        Booking newBooking = new Booking();
-        newBooking.setEventId(booking.eventId());
-        newBooking.setUserId(userId);
-        bookingRepository.save(newBooking);
-        return toDto(newBooking);
+        eventService.getById(booking.eventId());
+        Booking savedBooking = bookingRepository.save(toBooking(booking));
+        savedBooking.setUserId(getCurrentUserId());
+        return toDto(bookingRepository.save(savedBooking));
     }
 
     public BookingResponseDTO getBookingById(UUID id) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
-        validateOwnership(booking.getUserId());
+        validateOwnership(booking.getUserId()); // <-- Clean!
         return toDto(booking);
     }
 
@@ -55,7 +43,8 @@ public class BookingService {
 
     public BookingResponseDTO update(UUID id, BookingRegistrationDTO update) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
-        validateOwnership(booking.getUserId());
+        validateOwnership(booking.getUserId()); // <-- Clean!
+
         booking = updateBooking(booking, update);
         bookingRepository.save(booking);
         return toDto(booking);
@@ -63,19 +52,14 @@ public class BookingService {
 
     public void delete(UUID id) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
-        validateOwnership(booking.getUserId());
-        bookingRepository.deleteById(id);
+        validateOwnership(booking.getUserId()); // <-- Clean!
+
+        bookingRepository.delete(booking);
     }
 
     public List<BookingResponseDTO> getBookingsByUserId(UUID userId) {
-        UUID currentUserId = getCurrentUserId();
-        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
-                .getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        validateOwnership(userId); // <-- Clean! (Just pass the parameter directly)
 
-        if (!currentUserId.equals(userId) && !isAdmin) {
-            throw new AccessDeniedException("You can only view your own bookings");
-        }
         return bookingRepository.findAllByUserId(userId).stream().map(this::toDto).toList();
     }
 
@@ -91,7 +75,8 @@ public class BookingService {
     private BookingResponseDTO toDto(Booking booking) {
         return new BookingResponseDTO(
                 booking.getId(),
-                booking.getEventId());
+                booking.getEventId(),
+                booking.getUserId());
     }
 
     private Booking updateBooking(Booking booking, BookingRegistrationDTO update) {
@@ -101,8 +86,13 @@ public class BookingService {
 
     private void validateOwnership(UUID bookingUserId) {
         UUID currentUserId = getCurrentUserId();
-        if (!bookingUserId.equals(currentUserId)) {
-            throw new AccessDeniedException("You can only access your own bookings");
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = bookingUserId.equals(currentUserId);
+
+        if (!(isOwner || isAdmin)) {
+            throw new AccessDeniedException("You do not have permission to access this booking resource");
         }
     }
 
