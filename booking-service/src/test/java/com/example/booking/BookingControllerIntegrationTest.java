@@ -59,7 +59,8 @@ class BookingControllerIntegrationTest {
     void setUp() {
         // Configure the mock JwtUtil to allow all token validations
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn("a2821692-8860-4ddf-8a42-2635a416e60c");
+        String mockUserUuidAsUsername = UUID.randomUUID().toString();
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(mockUserUuidAsUsername);
         when(jwtUtil.getRoleFromToken(anyString())).thenReturn(java.util.Optional.of("ADMIN"));
     }
 
@@ -103,7 +104,8 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldFindTwoOfThreeBookingsByUserId() throws Exception {
-        UUID userId = UUID.fromString("a2821692-8860-4ddf-8a42-2635a416e60c");
+        UUID userId = UUID.randomUUID();
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(userId.toString());
 
         EventResponseDTO eventResponseDto1 = postTestEventRegistrationDTO();
         BookingRegistrationDTO bookingRegistrationDto1 = new BookingRegistrationDTO(eventResponseDto1.id(), userId);
@@ -113,12 +115,12 @@ class BookingControllerIntegrationTest {
         BookingRegistrationDTO bookingRegistrationDto2 = new BookingRegistrationDTO(eventResponseDto2.id(), userId);
         performPost(bookingRegistrationDto2);
 
-        String differentUser = UUID.randomUUID().toString();
-        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(differentUser);
+        UUID differentUser = UUID.randomUUID();
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(differentUser.toString());
 
         EventResponseDTO eventResponseDto3 = postTestEventRegistrationDTO();
         BookingRegistrationDTO bookingRegistrationDto3 = new BookingRegistrationDTO(eventResponseDto3.id(),
-                UUID.fromString(differentUser));
+                differentUser);
         performPost(bookingRegistrationDto3);
 
         when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(userId.toString());
@@ -155,7 +157,7 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldLimitUserToOneBookingPerEvent() throws Exception {
-        UUID userId = UUID.fromString("a2821692-8860-4ddf-8a42-2635a416e60c");
+        UUID userId = UUID.randomUUID();
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
         BookingRegistrationDTO bookingRegistrationDto = new BookingRegistrationDTO(eventResponseDto.id(), userId);
         performPost(bookingRegistrationDto);
