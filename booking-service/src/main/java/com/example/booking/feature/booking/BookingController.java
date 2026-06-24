@@ -57,7 +57,8 @@ public class BookingController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public BookingResponseDTO updateBooking(@PathVariable @NotNull UUID id, @RequestBody @Valid BookingRegistrationDTO update) {
+    public BookingResponseDTO updateBooking(@PathVariable @NotNull UUID id,
+            @RequestBody @Valid BookingRegistrationDTO update) {
         return bookingService.update(id, update);
     }
 

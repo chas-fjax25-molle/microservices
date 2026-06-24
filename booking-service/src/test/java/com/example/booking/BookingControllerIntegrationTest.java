@@ -1,6 +1,7 @@
 package com.example.booking;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,19 +12,26 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.example.booking.client.UserClient;
 import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.BookingResponseDTO;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
+import com.example.common.dto.UserResponseDTO;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -38,6 +46,14 @@ class BookingControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private UserClient userClient;
+
+    @BeforeEach
+    void setUp() {
+        Mockito.when(userClient.getUser(any())).thenReturn(getTestUserResponseDTO());
+    }
 
     private String uri = "/api/booking-service/bookings";
 
@@ -234,6 +250,10 @@ class BookingControllerIntegrationTest {
         return new BookingRegistrationDTO(
                 eventId,
                 UUID.randomUUID());
+    }
+
+    private ResponseEntity<UserResponseDTO> getTestUserResponseDTO() {
+        return new ResponseEntity<UserResponseDTO>(new UserResponseDTO(UUID.randomUUID(),"John Doe", "john.doe@example.com", "USER"),HttpStatus.OK);
     }
 
     // ---- Controller calls -----
