@@ -3,20 +3,25 @@ package com.example.booking;
 import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
+import com.example.common.security.JwtUtil;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,8 +32,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class EventControllerIntegrationTest {
 
@@ -38,9 +46,19 @@ class EventControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private String uri = "/api/booking-service/events";
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    private String uri = "/booking-service/events";
 
     private MediaType mt = MediaType.APPLICATION_JSON;
+
+    @BeforeEach
+    void setUp() {
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn("admin");
+        when(jwtUtil.getRoleFromToken(anyString())).thenReturn(java.util.Optional.of("ADMIN"));
+    }
 
     // ------- Happy Path --------
 
@@ -53,7 +71,7 @@ class EventControllerIntegrationTest {
     void shouldGetEventByIdSuccessfully() throws Exception {
         ResultActions response = performPost(getTestEventRegistrationDTO());
         EventResponseDTO eventResponseDTO = getResultDTO(response);
-
+        
         performGetById(eventResponseDTO.id()).andExpect(status().isOk());
     }
 
@@ -225,26 +243,31 @@ class EventControllerIntegrationTest {
 
     private ResultActions performPost(EventRegistrationDTO registration) throws Exception {
         return mockMvc.perform(post(uri)
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(registration)));
     }
 
     private ResultActions performGetById(UUID id) throws Exception {
-        return mockMvc.perform(get(uri + "/" + id));
+        return mockMvc.perform(get(uri + "/" + id)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     private ResultActions performGetAllEvents() throws Exception {
-        return mockMvc.perform(get(uri));
+        return mockMvc.perform(get(uri)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     private ResultActions performPut(UUID id, EventRegistrationDTO update) throws Exception {
         return mockMvc.perform(put(uri + "/" + id)
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)));
     }
 
     private ResultActions performDelete(UUID id) throws Exception {
-        return mockMvc.perform(delete(uri + "/" + id));
+        return mockMvc.perform(delete(uri + "/" + id)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     // ---- Read response DTO from result ----

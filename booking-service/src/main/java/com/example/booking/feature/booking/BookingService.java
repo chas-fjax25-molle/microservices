@@ -1,6 +1,7 @@
 package com.example.booking.feature.booking;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -8,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.booking.feature.booking.model.Booking;
+import com.example.booking.feature.event.EventRepository;
 import com.example.booking.feature.event.EventService;
 import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.BookingResponseDTO;
@@ -16,15 +18,20 @@ import com.example.common.dto.BookingResponseDTO;
 public class BookingService {
 
     private final EventService eventService;
-
+    private final EventRepository eventRepository;
     private final BookingRepository bookingRepository;
 
-    public BookingService(BookingRepository bookingRepository, EventService eventService) {
+    public BookingService(BookingRepository bookingRepository, EventService eventService, EventRepository eventRepository) {
         this.bookingRepository = bookingRepository;
         this.eventService = eventService;
+        this.eventRepository = eventRepository;
     }
 
     public BookingResponseDTO createBooking(BookingRegistrationDTO booking) {
+        if (!eventRepository.existsById(booking.eventId())) {
+            throw new NoSuchElementException("Event not found with ID: " + booking.eventId());
+        }
+
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID userId = UUID.fromString(username);
 

@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
-@RequestMapping("/api/booking-service/events")
+@RequestMapping("/booking-service/events")
 @RestController
 public class EventController {
     private final EventService eventService;

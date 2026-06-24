@@ -11,12 +11,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -24,12 +26,19 @@ import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.BookingResponseDTO;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
+import com.example.common.security.JwtUtil;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class BookingControllerIntegrationTest {
 
@@ -39,9 +48,20 @@ class BookingControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
     private String uri = "/api/booking-service/bookings";
 
     private MediaType mt = MediaType.APPLICATION_JSON;
+
+    @BeforeEach
+    void setUp() {
+        // Configure the mock JwtUtil to allow all token validations
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn("a2821692-8860-4ddf-8a42-2635a416e60c");
+        when(jwtUtil.getRoleFromToken(anyString())).thenReturn(java.util.Optional.of("ADMIN"));
+    }
 
     // ---- Happy path ----
 
@@ -83,16 +103,25 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldFindTwoOfThreeBookingsByUserId() throws Exception {
-        EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
-        UUID userId = UUID.randomUUID();
-        BookingRegistrationDTO bookingRegistrationDto = new BookingRegistrationDTO(eventResponseDto.id(), userId);
-        performPost(bookingRegistrationDto);
-        eventResponseDto = postTestEventRegistrationDTO();
-        bookingRegistrationDto = new BookingRegistrationDTO(eventResponseDto.id(), userId);
-        performPost(bookingRegistrationDto);
-        eventResponseDto = postTestEventRegistrationDTO();
-        bookingRegistrationDto = new BookingRegistrationDTO(eventResponseDto.id(), UUID.randomUUID());
-        performPost(bookingRegistrationDto);
+        UUID userId = UUID.fromString("a2821692-8860-4ddf-8a42-2635a416e60c");
+
+        EventResponseDTO eventResponseDto1 = postTestEventRegistrationDTO();
+        BookingRegistrationDTO bookingRegistrationDto1 = new BookingRegistrationDTO(eventResponseDto1.id(), userId);
+        performPost(bookingRegistrationDto1);
+
+        EventResponseDTO eventResponseDto2 = postTestEventRegistrationDTO();
+        BookingRegistrationDTO bookingRegistrationDto2 = new BookingRegistrationDTO(eventResponseDto2.id(), userId);
+        performPost(bookingRegistrationDto2);
+
+        String differentUser = UUID.randomUUID().toString();
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(differentUser);
+
+        EventResponseDTO eventResponseDto3 = postTestEventRegistrationDTO();
+        BookingRegistrationDTO bookingRegistrationDto3 = new BookingRegistrationDTO(eventResponseDto3.id(),
+                UUID.fromString(differentUser));
+        performPost(bookingRegistrationDto3);
+
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(userId.toString());
 
         ResultActions foundBookingResult = performGetAllBookingsByUserId(userId).andExpect(status().isOk());
         List<BookingResponseDTO> bookings = getResultDTOList(foundBookingResult);
@@ -126,7 +155,7 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldLimitUserToOneBookingPerEvent() throws Exception {
-        UUID userId = UUID.randomUUID();
+        UUID userId = UUID.fromString("a2821692-8860-4ddf-8a42-2635a416e60c");
         EventResponseDTO eventResponseDto = postTestEventRegistrationDTO();
         BookingRegistrationDTO bookingRegistrationDto = new BookingRegistrationDTO(eventResponseDto.id(), userId);
         performPost(bookingRegistrationDto);
@@ -144,6 +173,7 @@ class BookingControllerIntegrationTest {
     @Test
     void shouldReturnBadRequestWhenMalformedJson() throws Exception {
         mockMvc.perform(post(uri)
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content("{invalid json}"))
                 .andExpect(status().isBadRequest());
@@ -163,13 +193,15 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenPathVariableIsNotUUID() throws Exception {
-        mockMvc.perform(get(uri + "/not-a-uuid"))
+        mockMvc.perform(get(uri + "/not-a-uuid")
+                .header("Authorization", "Bearer dummyToken"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void shouldReturnBadRequestWhenPathVariableIsInvalidUUIDFormat() throws Exception {
-        mockMvc.perform(get(uri + "/12345"))
+        mockMvc.perform(get(uri + "/12345")
+                .header("Authorization", "Bearer dummyToken"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -177,6 +209,7 @@ class BookingControllerIntegrationTest {
     void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
         BookingRegistrationDTO update = new BookingRegistrationDTO(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(put(uri + "/invalid-uuid")
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isBadRequest());
@@ -184,7 +217,8 @@ class BookingControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exception {
-        mockMvc.perform(delete(uri + "/abc-def-ghi"))
+        mockMvc.perform(delete(uri + "/abc-def-ghi")
+                .header("Authorization", "Bearer dummyToken"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -223,6 +257,7 @@ class BookingControllerIntegrationTest {
     @Test
     void shouldReturnUnsupportedMediaTypeWhenContentTypeNotSupported() throws Exception {
         mockMvc.perform(post(uri)
+                .header("Authorization", "Bearer dummyToken")
                 .contentType("application/xml")
                 .content("<booking/>"))
                 .andExpect(status().isUnsupportedMediaType());
@@ -240,30 +275,36 @@ class BookingControllerIntegrationTest {
 
     private ResultActions performPost(BookingRegistrationDTO registration) throws Exception {
         return mockMvc.perform(post(uri)
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(registration)));
     }
 
     private ResultActions performGetById(UUID id) throws Exception {
-        return mockMvc.perform(get(uri + "/" + id));
+        return mockMvc.perform(get(uri + "/" + id)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     private ResultActions performGetAllBookings() throws Exception {
-        return mockMvc.perform(get(uri));
+        return mockMvc.perform(get(uri)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     private ResultActions performGetAllBookingsByUserId(UUID userId) throws Exception {
-        return mockMvc.perform(get(uri + "/user/" + userId));
+        return mockMvc.perform(get(uri + "/user/" + userId)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     private ResultActions performPut(UUID id, BookingRegistrationDTO update) throws Exception {
         return mockMvc.perform(put(uri + "/" + id)
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(update)));
     }
 
     private ResultActions performDelete(UUID id) throws Exception {
-        return mockMvc.perform(delete(uri + "/" + id));
+        return mockMvc.perform(delete(uri + "/" + id)
+                .header("Authorization", "Bearer dummyToken"));
     }
 
     // ---- Read response DTO from result ----
@@ -303,7 +344,8 @@ class BookingControllerIntegrationTest {
     }
 
     private EventResponseDTO performEventPost(EventRegistrationDTO registration) throws Exception {
-        ResultActions resultActions = mockMvc.perform(post("/api/booking-service/events")
+        ResultActions resultActions = mockMvc.perform(post("/booking-service/events")
+                .header("Authorization", "Bearer dummyToken")
                 .contentType(mt)
                 .content(objectMapper.writeValueAsString(registration)));
 
