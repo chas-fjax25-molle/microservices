@@ -1,5 +1,6 @@
 package com.example.booking.feature.event;
 
+import com.example.booking.client.UserClient;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
 
@@ -29,9 +30,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RestController
 public class EventController {
     private final EventService eventService;
+    private final UserClient userClient;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, UserClient userClient) {
         this.eventService = eventService;
+        this.userClient = userClient;
     }
 
     @Operation(summary = "Create a new event", description = "Create a new event. Requires ADMIN role only.")

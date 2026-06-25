@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,10 +46,10 @@ public class UserController {
      * @param request Login credentials
      * @return The user details if the login credentials are valid
      */
-    @Operation(summary = "Validate login credentials", description = "Validates user login and return user details if credentials are valid.")
+    @Operation(summary = "Validate login credentials", description = "Validates user login and returns user details if credentials are valid.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful, user details returned"),
-            @ApiResponse(responseCode = "400", description = "Invalid reqest"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
             @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/validate")
@@ -56,35 +58,39 @@ public class UserController {
     }
 
     /**
-     * Get the user details for a given ID.
-     * 
-     * @param id The ID of the user to get
-     * @return The user details for the given ID if it exists
-     */
-    @Operation(summary = "Get user by ID", description = "Fetches a ser by their niqe UUID.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User found"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUser(@PathVariable @NotNull @NonNull UUID id) {
-        return ResponseEntity.ok(userService.getUserById(id));
-    }
-
-    /**
      * Register a new user.
      * 
      * @param entity The user details to register
      * @return The user details for the newly registered user
      */
-    @Operation(summary = "Register new user", description = "Creates a new ser in the system")
+    @Operation(summary = "Register new user", description = "Creates a new user in the system")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request")
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "409", description = "Username or email already exists")
     })
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUser(@RequestBody @Validated UserRegisterDTO entity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(entity));
+    }
+
+    /**
+     * Get the user details for a given ID.
+     * 
+     * @param id The ID of the user to get
+     * @return The user details for the given ID if it exists
+     */
+    @Operation(summary = "Get user by ID", description = "Fetches a user by their unique UUID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - requires higher privileges"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> getUser(
+            @PathVariable @NotNull UUID id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     /**
@@ -97,10 +103,14 @@ public class UserController {
     @Operation(summary = "Update user", description = "Updates an existing user's details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - requires higher privileges"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable @NotNull @NonNull UUID id,
+    public ResponseEntity<UserResponseDTO> updateUser(
+            @PathVariable @NotNull UUID id,
             @RequestBody @Validated UserUpdateDTO entity) {
         return ResponseEntity.ok(userService.updateUser(id, entity));
     }
@@ -114,11 +124,47 @@ public class UserController {
     @Operation(summary = "Delete user", description = "Deletes a user by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - requires higher privileges"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable @NotNull @NonNull UUID id) {
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable @NotNull @NonNull UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "Get current logged-in user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid JWT"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - missing required role"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    @Operation(summary = "Update current logged-in user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - missing or invalid JWT"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - missing required role"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PreAuthorize("hasRole('USER')")
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateMe(
+            Authentication authentication,
+            @RequestBody @Validated UserUpdateDTO entity) {
+        UUID userId = UUID.fromString(authentication.getName());
+        return ResponseEntity.ok(userService.updateUser(userId, entity));
+    }
+
 }

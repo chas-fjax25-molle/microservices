@@ -6,16 +6,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-
+import com.example.common.security.JwtUtil;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Sql(statements = """
         DELETE FROM USERS;
         INSERT INTO USERS (ID, USERNAME, EMAIL, PASSWORD) VALUES
-            ('00000000-0000-0000-0000-000000000000', 'test', 'test@test.com', '1234')
+            ('00000000-0000-0000-0000-000000000000', 'test', 'test@test.com', '$2a$10$atK1n5eeBXD03vX.5LNqDe5ErjrmLZbBiFlctpGJlQawuz6yJCROm')
             """)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc(addFilters = false)
@@ -23,6 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserValidationTests {
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     @Test
     void shouldReturnUserInformationOnValidCredentials() throws Exception {

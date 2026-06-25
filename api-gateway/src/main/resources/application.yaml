@@ -64,6 +64,8 @@ springdoc:
         urls:
             - name: User Service
               url: /api/user-service/v3/api-docs
+              predicates:
+                  - Path=/api/user-service/**
             - name: Booking Service
               url: /api/booking-service/v3/api-docs
         operationsSorter: method

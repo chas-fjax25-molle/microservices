@@ -1,29 +1,37 @@
 package com.example.booking.feature.booking;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.example.booking.client.UserClient;
 import com.example.booking.feature.booking.model.Booking;
 import com.example.booking.feature.event.EventService;
 import com.example.common.dto.BookingRegistrationDTO;
 import com.example.common.dto.BookingResponseDTO;
+import com.example.common.dto.UserResponseDTO;
 
 @Service
 public class BookingService {
 
     private final EventService eventService;
     private final BookingRepository bookingRepository;
+    private final UserClient userClient;
 
-    public BookingService(EventService eventService, BookingRepository bookingRepository) {
-        this.eventService = eventService;
+    public BookingService(BookingRepository bookingRepository, EventService eventService, UserClient userClient) {
         this.bookingRepository = bookingRepository;
+        this.eventService = eventService;
+        this.userClient = userClient;
     }
 
     public BookingResponseDTO createBooking(BookingRegistrationDTO booking) {
+        validateUser(booking.userId());
         eventService.getById(booking.eventId());
         Booking savedBooking = bookingRepository.save(toBooking(booking));
         savedBooking.setUserId(getCurrentUserId());
@@ -42,6 +50,7 @@ public class BookingService {
     }
 
     public BookingResponseDTO update(UUID id, BookingRegistrationDTO update) {
+        validateUser(update.userId());
         Booking booking = bookingRepository.findById(id).orElseThrow();
         validateOwnership(booking.getUserId()); // <-- Clean!
 
@@ -60,6 +69,7 @@ public class BookingService {
     public List<BookingResponseDTO> getBookingsByUserId(UUID userId) {
         validateOwnership(userId); // <-- Clean! (Just pass the parameter directly)
 
+        validateUser(userId);
         return bookingRepository.findAllByUserId(userId).stream().map(this::toDto).toList();
     }
 
@@ -99,5 +109,13 @@ public class BookingService {
     private UUID getCurrentUserId() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return UUID.fromString(username);
+    }
+    private void validateUser(UUID id) {
+        ResponseEntity<UserResponseDTO> user = userClient.getUser(id);
+        HttpStatusCode status = user.getStatusCode();
+        System.out.println(status);
+        if (status != HttpStatusCode.valueOf(200)) {
+            throw new NoSuchElementException("User not found with ID: " + id);
+        }
     }
 }

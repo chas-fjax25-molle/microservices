@@ -69,6 +69,16 @@ public class JwtUtil {
     }
 
     /**
+     * Parses a JWT token and returns the user ID.
+     *
+     * @param token the JWT token to parse
+     * @return the parsed user ID
+     */
+    public UUID getIdFromToken(String token) {
+        return UUID.fromString(parseClaims(token).get("id", String.class));
+    }
+
+    /**
      * Generates a JWT token for the given username and ID.
      *
      * @param username the username to include in the token
