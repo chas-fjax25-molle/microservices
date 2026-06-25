@@ -4,6 +4,9 @@ import com.example.booking.feature.event.model.Event;
 import com.example.common.dto.EventRegistrationDTO;
 import com.example.common.dto.EventResponseDTO;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -16,22 +19,26 @@ public class EventService {
     public EventService(EventRepository eventRepository) {
         this.eventRepository = eventRepository;
     }
-     
+    
+    @CacheEvict(value = {"events", "event"}, allEntries = true)
     public EventResponseDTO create(EventRegistrationDTO registration) {
         Event event = toEvent(registration);
         Event createdEvent = eventRepository.save(event);
         return toDto(createdEvent);
     }
 
+    @Cacheable(value = "event", key = "#id")
     public EventResponseDTO getById(UUID id) {
         return toDto(eventRepository.findById(id).orElseThrow());
     }
 
+    @Cacheable("events")
     public List<EventResponseDTO> getAllEvents() {
         List<Event> events = eventRepository.findAll();
         return events.stream().map(this::toDto).toList();
     }
     
+    @CacheEvict(value = {"events", "event"}, allEntries = true)
     public EventResponseDTO update(UUID id, EventRegistrationDTO update) {
         Event event = eventRepository.findById(id).orElseThrow();
         event = updateEvent(event, update);
@@ -39,6 +46,7 @@ public class EventService {
         return toDto(event);
     }
 
+    @CacheEvict(value = {"events", "event"}, allEntries = true)
     public void delete(UUID id) {
         eventRepository.findById(id).orElseThrow();
         eventRepository.deleteById(id);
