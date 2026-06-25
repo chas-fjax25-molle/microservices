@@ -71,16 +71,16 @@ for s in $(seq 1 "$MAX_RETRIES"); do
     sleep "$RETRY_INTERVAL"
 done
 
-echo "=== Verifying load balancer can resolve user-service ==="
+echo "=== Verifying load balancer can resolve booking-service ==="
 for s in $(seq 1 30); do
     LB_PROBE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 \
-        "$GATEWAY_URL/api/user-service/v3/api-docs" 2>/dev/null || true)
+        "$GATEWAY_URL/api/booking-service/events" 2>/dev/null || true)
     if [ "$LB_PROBE" = "200" ]; then
         echo "Load balancer is ready!"
         break
     fi
     if [ "$s" -eq 30 ]; then
-        echo "ERROR: Load balancer did not resolve user-service in time (last status: $LB_PROBE)"
+        echo "ERROR: Load balancer did not resolve booking-service in time (last status: $LB_PROBE)"
         docker compose logs --tail=30 api-gateway
         exit 1
     fi
