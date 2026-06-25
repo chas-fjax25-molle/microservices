@@ -133,10 +133,10 @@ Examples:
 | Endpoint           | Access         |
 | ------------------ | -------------- |
 | GET /events        | Public         |
-| POST /events       | ADMIN          |
+| POST /events       | Public         |
 | POST /bookings     | USER or ADMIN  |
 | GET /bookings      | ADMIN          |
-| GET /bookings/{id} | Owner or ADMIN |
+| GET /bookings/{id} | USER or ADMIN  |
 
 ---
 
