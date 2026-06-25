@@ -153,7 +153,7 @@ public class UserCrudTest {
     }
 
     @Test
-    void getUserShouldBeForbiddenForUserRole() throws Exception {
+    void getUserShouldBeForbiddenForUserRoleWhenAccessingOtherUser() throws Exception {
         String response = mockMvc.perform(post("/api/user-service/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"username\": \"usera\", \"email\": \"usera@test.com\", \"password\": \"password123\"}"))
