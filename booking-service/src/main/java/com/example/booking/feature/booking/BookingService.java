@@ -107,8 +107,8 @@ public class BookingService {
     }
 
     private UUID getCurrentUserId() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return UUID.fromString(username);
+        String id = SecurityContextHolder.getContext().getAuthentication().getName();
+        return UUID.fromString(id);
     }
     private void validateUser(UUID id) {
         ResponseEntity<UserResponseDTO> user = userClient.getUser(id);
