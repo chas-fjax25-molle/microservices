@@ -4,6 +4,8 @@ import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -19,9 +21,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class BookingServiceExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(BookingServiceExceptionHandler.class);
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleException(Exception e) {
+        log.error("Unhandled exception", e);
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occured.");
         problemDetail.setTitle("Internal Server Error");
