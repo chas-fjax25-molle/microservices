@@ -28,13 +28,13 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(
-                        "/booking-service/users/register",
-                        "/booking-service/users/login",
-                        "/booking-service/users/validate",
-                        "/booking-service/events",
-                        "/booking-service/events/**",
+                        "/api/booking-service/users/register",
+                        "/api/booking-service/users/login",
+                        "/api/booking-service/users/validate",
+                        "/api/booking-service/events",
+                        "/api/booking-service/events/**",
                         "/v3/api-docs/**",
-                        "/booking-service/v3/api-docs/**",
+                        "/api/booking-service/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/error")
