@@ -71,6 +71,7 @@ services:
             SERVER_PORT: 8083
             VAULT_ADDR: http://vault:8200/
             EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+            EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS: 5
         volumes:
             - vault-secrets:/run/secrets:ro
 
@@ -99,7 +100,8 @@ services:
         environment:
             SERVER_PORT: 8080
             VAULT_ADDR: http://vault:8200/
-            EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+            EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+            EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS: 5
         volumes:
             - vault-secrets:/run/secrets:ro
         ports:

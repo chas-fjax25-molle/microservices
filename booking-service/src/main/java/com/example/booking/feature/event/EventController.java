@@ -37,15 +37,15 @@ public class EventController {
         this.userClient = userClient;
     }
 
-    @Operation(summary = "Create a new event", description = "Create a new event. Requires ADMIN role only.")
+    @Operation(summary = "Create a new event", description = "Create a new event. Requires USER or ADMIN role.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Event created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Only ADMIN can create events")
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires USER or ADMIN role")
     })
     @PostMapping()
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public EventResponseDTO createEvent(@RequestBody @Valid EventRegistrationDTO registration) {
         return eventService.create(registration);

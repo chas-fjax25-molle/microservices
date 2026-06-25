@@ -68,8 +68,9 @@ class BookingControllerIntegrationTest {
     void setUp() {
         // Configure the mock JwtUtil to allow all token validations
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        UUID mockUserUuidAsUsername = UUID.randomUUID();
-        when(jwtUtil.getIdFromToken(anyString())).thenReturn(mockUserUuidAsUsername);
+        UUID mockUserId = UUID.randomUUID();
+        when(jwtUtil.getIdFromToken(anyString())).thenReturn(mockUserId);
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(mockUserId.toString());
         when(jwtUtil.getRoleFromToken(anyString())).thenReturn(java.util.Optional.of("ADMIN"));
         Mockito.when(userClient.getUser(any())).thenReturn(getTestUserResponseDTO());
     }
@@ -116,6 +117,7 @@ class BookingControllerIntegrationTest {
     void shouldFindTwoOfThreeBookingsByUserId() throws Exception {
         UUID userId = UUID.randomUUID();
         when(jwtUtil.getIdFromToken(anyString())).thenReturn(userId);
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(userId.toString());
 
         EventResponseDTO eventResponseDto1 = postTestEventRegistrationDTO();
         BookingRegistrationDTO bookingRegistrationDto1 = new BookingRegistrationDTO(eventResponseDto1.id(), userId);
@@ -127,6 +129,7 @@ class BookingControllerIntegrationTest {
 
         UUID differentUser = UUID.randomUUID();
         when(jwtUtil.getIdFromToken(anyString())).thenReturn(differentUser);
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(differentUser.toString());
 
         EventResponseDTO eventResponseDto3 = postTestEventRegistrationDTO();
         BookingRegistrationDTO bookingRegistrationDto3 = new BookingRegistrationDTO(eventResponseDto3.id(),
@@ -134,6 +137,7 @@ class BookingControllerIntegrationTest {
         performPost(bookingRegistrationDto3);
 
         when(jwtUtil.getIdFromToken(anyString())).thenReturn(userId);
+        when(jwtUtil.getUsernameFromToken(anyString())).thenReturn(userId.toString());
 
         ResultActions foundBookingResult = performGetAllBookingsByUserId(userId).andExpect(status().isOk());
         List<BookingResponseDTO> bookings = getResultDTOList(foundBookingResult);
@@ -284,7 +288,8 @@ class BookingControllerIntegrationTest {
     }
 
     private ResponseEntity<UserResponseDTO> getTestUserResponseDTO() {
-        return new ResponseEntity<UserResponseDTO>(new UserResponseDTO(UUID.randomUUID(),"John Doe", "john.doe@example.com", "USER"),HttpStatus.OK);
+        return new ResponseEntity<UserResponseDTO>(
+                new UserResponseDTO(UUID.randomUUID(), "John Doe", "john.doe@example.com", "USER"), HttpStatus.OK);
     }
 
     // ---- Controller calls -----

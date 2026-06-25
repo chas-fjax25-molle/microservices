@@ -11,6 +11,9 @@ import com.example.common.dto.UserRegisterDTO;
 import com.example.common.dto.UserResponseDTO;
 import com.example.gateway.service.UserService;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 @RestController
 @RequestMapping("/api/gateway/users")
 public class UserController {
@@ -22,7 +25,8 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> registerUser(@RequestBody @Validated UserRegisterDTO dto) {
-        return userService.registerUser(dto);
+    public Mono<ResponseEntity<UserResponseDTO>> registerUser(@RequestBody @Validated UserRegisterDTO dto) {
+        return Mono.fromCallable(() -> userService.registerUser(dto))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

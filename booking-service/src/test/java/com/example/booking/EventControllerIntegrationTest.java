@@ -73,7 +73,7 @@ class EventControllerIntegrationTest {
     void shouldGetEventByIdSuccessfully() throws Exception {
         ResultActions response = performPost(getTestEventRegistrationDTO());
         EventResponseDTO eventResponseDTO = getResultDTO(response);
-        
+
         performGetById(eventResponseDTO.id()).andExpect(status().isOk());
     }
 
@@ -117,10 +117,10 @@ class EventControllerIntegrationTest {
 
     // @Test
     // void shouldReturnBadRequestWhenMalformedJson() throws Exception {
-    //     mockMvc.perform(post(uri)
-    //             .contentType(mt)
-    //             .content("{invalid json}"))
-    //             .andExpect(status().isBadRequest());
+    // mockMvc.perform(post(uri)
+    // .contentType(mt)
+    // .content("{invalid json}"))
+    // .andExpect(status().isBadRequest());
     // }
 
     @Test
@@ -136,38 +136,42 @@ class EventControllerIntegrationTest {
 
     // @Test
     // void shouldReturnBadRequestWhenPathVariableIsNotUUID() throws Exception {
-    //     mockMvc.perform(get(uri + "/not-a-uuid"))
-    //             .andExpect(status().isBadRequest());
+    // mockMvc.perform(get(uri + "/not-a-uuid"))
+    // .andExpect(status().isBadRequest());
     // }
 
     // @Test
-    // void shouldReturnBadRequestWhenPathVariableIsInvalidUUIDFormat() throws Exception {
-    //     mockMvc.perform(get(uri + "/12345"))
-    //             .andExpect(status().isBadRequest());
+    // void shouldReturnBadRequestWhenPathVariableIsInvalidUUIDFormat() throws
+    // Exception {
+    // mockMvc.perform(get(uri + "/12345"))
+    // .andExpect(status().isBadRequest());
     // }
 
     // @Test
-    // void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws Exception {
-    //     BookingRegistrationDTO update = new BookingRegistrationDTO(UUID.randomUUID(), UUID.randomUUID());
-    //     mockMvc.perform(put(uri + "/invalid-uuid")
-    //             .contentType(mt)
-    //             .content(objectMapper.writeValueAsString(update)))
-    //             .andExpect(status().isBadRequest());
+    // void shouldReturnBadRequestWhenUpdatingWithInvalidUUIDPathVariable() throws
+    // Exception {
+    // BookingRegistrationDTO update = new BookingRegistrationDTO(UUID.randomUUID(),
+    // UUID.randomUUID());
+    // mockMvc.perform(put(uri + "/invalid-uuid")
+    // .contentType(mt)
+    // .content(objectMapper.writeValueAsString(update)))
+    // .andExpect(status().isBadRequest());
     // }
 
     // @Test
-    // void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws Exception {
-    //     mockMvc.perform(delete(uri + "/abc-def-ghi"))
-    //             .andExpect(status().isBadRequest());
+    // void shouldReturnBadRequestWhenDeletingWithInvalidUUIDPathVariable() throws
+    // Exception {
+    // mockMvc.perform(delete(uri + "/abc-def-ghi"))
+    // .andExpect(status().isBadRequest());
     // }
 
     // @Test
     // void shouldReturnBadRequestWhenFieldConversionFails() throws Exception {
-    //     String malformedJson = "{\"eventId\": \"not-a-uuid\", \"userId\": null}";
-    //     mockMvc.perform(post(uri)
-    //             .contentType(mt)
-    //             .content(malformedJson))
-    //             .andExpect(status().isBadRequest());
+    // String malformedJson = "{\"eventId\": \"not-a-uuid\", \"userId\": null}";
+    // mockMvc.perform(post(uri)
+    // .contentType(mt)
+    // .content(malformedJson))
+    // .andExpect(status().isBadRequest());
     // }
 
     // ---- 404 Not Found ----
@@ -196,20 +200,21 @@ class EventControllerIntegrationTest {
     // @Test
     // @WithMockUser(roles = "USER") // Requires Spring Security Test
     // void shouldReturnForbiddenWhenUserLacksPermission() throws Exception {
-    //     ResultActions response = performPost(getTestEventRegistrationDTO());
-    //     EventResponseDTO eventResponseDTO = getResultDTO(response);
+    // ResultActions response = performPost(getTestEventRegistrationDTO());
+    // EventResponseDTO eventResponseDTO = getResultDTO(response);
 
-    //     // Assuming your controller has auth checks
-    //     performDelete(eventResponseDTO.id()).andExpect(status().isForbidden());
+    // // Assuming your controller has auth checks
+    // performDelete(eventResponseDTO.id()).andExpect(status().isForbidden());
     // }
 
     // ---- 406 Not Acceptable ----
 
     // @Test
-    // void shouldReturnNotAcceptableWhenAcceptHeaderNotSupported() throws Exception {
-    //     mockMvc.perform(get(uri)
-    //             .accept("application/xml"))
-    //             .andExpect(status().isNotAcceptable());
+    // void shouldReturnNotAcceptableWhenAcceptHeaderNotSupported() throws Exception
+    // {
+    // mockMvc.perform(get(uri)
+    // .accept("application/xml"))
+    // .andExpect(status().isNotAcceptable());
     // }
 
     // ---- TestDto ----

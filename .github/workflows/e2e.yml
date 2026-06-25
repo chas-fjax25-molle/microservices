@@ -1,0 +1,35 @@
+name: End-to-end test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run E2E tests
+        run: bash scripts/e2e-test.sh
+
+      - name: Upload container logs on failure
+        if: failure()
+        run: docker compose logs > docker-logs.txt
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docker-logs
+          path: docker-logs.txt
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v

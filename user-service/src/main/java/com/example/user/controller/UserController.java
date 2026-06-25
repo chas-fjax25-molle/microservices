@@ -86,7 +86,7 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Forbidden - requires higher privileges"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == authentication.principal")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUser(
             @PathVariable @NotNull UUID id) {

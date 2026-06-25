@@ -2,6 +2,8 @@ package com.example.gateway.exception;
 
 import java.nio.file.AccessDeniedException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,8 @@ import feign.FeignException;
 
 @RestControllerAdvice
 public class GatewayExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GatewayExceptionHandler.class);
 
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<String> handleFeignException(FeignException e) {
@@ -33,7 +37,8 @@ public class GatewayExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleGenericException() {
+    public String handleGenericException(Exception e) {
+        log.error("Unhandled exception", e);
         return "An unexpected error occurred";
     }
 }
