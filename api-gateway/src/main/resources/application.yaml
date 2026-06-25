@@ -24,7 +24,6 @@ spring:
                           predicates:
                               - Path=/api/user-service/**
                           filters:
-                              - StripPrefix=2
                               - AddRequestHeader=X-Service-Name,user-service
                               - name: RequestRateLimiter
                                 args:
@@ -38,7 +37,6 @@ spring:
                           predicates:
                               - Path=/api/booking-service/**
                           filters:
-                              - StripPrefix=2
                               - AddRequestHeader=X-Service-Name,booking-service
                               - name: RequestRateLimiter
                                 args:
