@@ -2,6 +2,7 @@ package com.example.booking.common.security;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,10 +47,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String username = jwtUtil.getUsernameFromToken(token);
+        UUID id = jwtUtil.getIdFromToken(token);
         String role = jwtUtil.getRoleFromToken(token).orElse("USER");
 
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-        var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+        var authentication = new UsernamePasswordAuthenticationToken(id, null, authorities);
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
