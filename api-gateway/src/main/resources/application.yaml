@@ -68,3 +68,5 @@ springdoc:
                   - Path=/api/user-service/**
             - name: Booking Service
               url: /api/booking-service/v3/api-docs
+        operationsSorter: method
+        tagsSorter: alpha

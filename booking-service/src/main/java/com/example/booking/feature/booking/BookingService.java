@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,7 @@ import com.example.common.dto.UserResponseDTO;
 public class BookingService {
 
     private final EventService eventService;
-
     private final BookingRepository bookingRepository;
-
     private final UserClient userClient;
 
     public BookingService(BookingRepository bookingRepository, EventService eventService, UserClient userClient) {
@@ -34,11 +34,13 @@ public class BookingService {
         validateUser(booking.userId());
         eventService.getById(booking.eventId());
         Booking savedBooking = bookingRepository.save(toBooking(booking));
-        return toDto(savedBooking);
+        savedBooking.setUserId(getCurrentUserId());
+        return toDto(bookingRepository.save(savedBooking));
     }
 
     public BookingResponseDTO getBookingById(UUID id) {
         Booking booking = bookingRepository.findById(id).orElseThrow();
+        validateOwnership(booking.getUserId()); // <-- Clean!
         return toDto(booking);
     }
 
@@ -50,17 +52,23 @@ public class BookingService {
     public BookingResponseDTO update(UUID id, BookingRegistrationDTO update) {
         validateUser(update.userId());
         Booking booking = bookingRepository.findById(id).orElseThrow();
+        validateOwnership(booking.getUserId()); // <-- Clean!
+
         booking = updateBooking(booking, update);
         bookingRepository.save(booking);
         return toDto(booking);
     }
 
     public void delete(UUID id) {
-        bookingRepository.findById(id).orElseThrow();
-        bookingRepository.deleteById(id);
+        Booking booking = bookingRepository.findById(id).orElseThrow();
+        validateOwnership(booking.getUserId()); // <-- Clean!
+
+        bookingRepository.delete(booking);
     }
 
     public List<BookingResponseDTO> getBookingsByUserId(UUID userId) {
+        validateOwnership(userId); // <-- Clean! (Just pass the parameter directly)
+
         validateUser(userId);
         return bookingRepository.findAllByUserId(userId).stream().map(this::toDto).toList();
     }
@@ -83,10 +91,25 @@ public class BookingService {
 
     private Booking updateBooking(Booking booking, BookingRegistrationDTO update) {
         booking.setEventId(update.eventId());
-        booking.setUserId(update.userId());
         return booking;
     }
 
+    private void validateOwnership(UUID bookingUserId) {
+        UUID currentUserId = getCurrentUserId();
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = bookingUserId.equals(currentUserId);
+
+        if (!(isOwner || isAdmin)) {
+            throw new AccessDeniedException("You do not have permission to access this booking resource");
+        }
+    }
+
+    private UUID getCurrentUserId() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return UUID.fromString(username);
+    }
     private void validateUser(UUID id) {
         ResponseEntity<UserResponseDTO> user = userClient.getUser(id);
         HttpStatusCode status = user.getStatusCode();
